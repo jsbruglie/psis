@@ -1,7 +1,9 @@
+
 /*
 	psis_kv.h
 	Header for the library that allows the connection between server and clients
 */
+
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
@@ -14,11 +16,10 @@
 
 
 /* Defines */
-#define SOCK_ADDRESS "/tmp/socket_L5_sv"
+#define SOCK_ADDRESS "/tmp/psis_kv_sock"
 #define PORT 9999
 
 #define MESSAGE_LEN 100
-
 
 /* 	Data structures */
 typedef struct message{
