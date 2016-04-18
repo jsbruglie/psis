@@ -66,12 +66,25 @@ int kv_write(int kv_descriptor, uint32_t key, char* value, int value_length){
 
 	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
 	if (nbytes==-1){
-		perror("kv_write - Write: ");
+		perror("kv_write - Error sending: ");
 		return -1;
 	}
-	printf("Sent %d bytes: %s \n", nbytes, m.value);
+	//printf("Sent %d bytes: %s with key %u \n", nbytes, m.value, m.key);
 
+
+	//The server should return something to acknowledge
+	/*
+	nbytes = recv(kv_descriptor, &m, sizeof(message), 0);
+	if(strcmp(m.value,"s")){
+		printf(" %d bytes were writen on the server. %s", nbytes, m.value);
+		return 0;
+	}else{
+		perror("kv_write - Error on the server");
+		return -1;
+	}*/
 	return 0;
+
+
 }
 
 /* 
@@ -81,6 +94,24 @@ int kv_write(int kv_descriptor, uint32_t key, char* value, int value_length){
 	Returns 0 on success, -1 on failure. If a value has previously been deleted, and there is an attempt to read it,it should result on error.  
 */
 int kv_read(int kv_descriptor, uint32_t key, char* value, int value_length){
+	//Must write to make the server know and then read
+	message m;
+	int nbytes;
+
+	strcpy(m.value,"");
+	m.key = key;
+
+	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
+	if (nbytes==-1){
+		perror("kv_write - Write: ");
+		return -1;
+	}
+
+	nbytes = recv(kv_descriptor, &m, sizeof(message), 0);
+	//printf("Received %d bytes. %s \n", nbytes, m.value);
+	strcpy(value, m.value);
+	return 0;
+
 
 }
 

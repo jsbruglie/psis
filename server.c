@@ -70,6 +70,26 @@ int main(int argc, char **argv){
        	nbytes = recv(new_fd, &m, sizeof(message), 0); 
 		printf("Received %d bytes: %s with key %u \n", nbytes, m.value, m.key);
 
+		if(strcmp(m.value,"")){
+
+			if(m.key == 30){
+				printf("Fetching a value for key %u...\n", m.key);
+				strcpy(m.value, "potato");
+				printf("Found value %s\n", m.value);
+				m.value[VALUE_LEN - 1] = '\0'; 	
+        		nbytes = send(new_fd, &m, sizeof(message), 0);
+			}
+
+		}else{
+
+			//Write to the list. If the write is succesful acknowledge the client
+			/*
+			strcpy(m.value, "s");
+			m.value[VALUE_LEN - 1] = '\0'; 	
+    		nbytes = send(new_fd, &m, sizeof(message), 0);
+			*/
+
+		}
 
 
 
