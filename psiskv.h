@@ -19,11 +19,12 @@
 #define SOCK_ADDRESS "/tmp/psis_kv_sock"
 #define PORT 9999
 
-#define MESSAGE_LEN 100
+#define VALUE_LEN 100
 
 /* 	Data structures */
 typedef struct message{
-    char buffer[MESSAGE_LEN];
+	uint32_t key;
+    char value[VALUE_LEN];
 } message;
 
 /*

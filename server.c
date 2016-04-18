@@ -24,13 +24,13 @@ void intHandler(int sock_fd){
 int main(int argc, char **argv){
 
 	message m;
+	int nbytes;
 
 	/* Configure CTR-C signal */
 	signal(SIGINT, intHandler);
 	
 	struct sockaddr_in server_addr, client_addr;
 	socklen_t size_addr;	
-
 	
 	/* Creates a socket for the server */
 	int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -61,6 +61,19 @@ int main(int argc, char **argv){
 			perror("Accept: ");
 			exit(-1);
 		}
+
+
+
+
+
+		/* Receive a message */
+       	nbytes = recv(new_fd, &m, sizeof(message), 0); 
+		printf("Received %d bytes: %s with key %u \n", nbytes, m.value, m.key);
+
+
+
+
+
 
 	}
 

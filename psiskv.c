@@ -37,7 +37,7 @@ int kv_connect(char* kv_server_ip, int kv_server_port){
 	err = connect(sock_fd, (const struct sockaddr *) &server_addr, sizeof(server_addr));
 	if (err == -1){
 		perror("kv_connect - Connect: ");
-		exit(-1);
+		return -1;
 	}
 	return sock_fd;
 
@@ -48,7 +48,8 @@ int kv_connect(char* kv_server_ip, int kv_server_port){
 	Closes the connection with a previously opened key-value store.
 */
 void kv_close(int kv_descriptor){
-
+	printf("Closing socket...\n");
+	close(kv_descriptor);
 }
 
 /* 
@@ -57,7 +58,20 @@ void kv_close(int kv_descriptor){
 	Returns 0 on success, -1 on failure.
 */ 
 int kv_write(int kv_descriptor, uint32_t key, char* value, int value_length){
+	message m;
+	int nbytes;
 
+	strcpy(m.value, value);
+	m.key = key;
+
+	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
+	if (nbytes==-1){
+		perror("kv_write - Write: ");
+		return -1;
+	}
+	printf("Sent %d bytes: %s \n", nbytes, m.value);
+
+	return 0;
 }
 
 /* 
