@@ -2,11 +2,11 @@
 
 struct LinkedListStruct
 {
-  Item this;
+  message this;
   LinkedList * next;
 };
 
-void freeLinkedList(LinkedList * first, void (*freeItem)(Item, int), int x)
+void freeLinkedList(LinkedList * first, void (*freemessage)(message, int), int x)
 {
   LinkedList * next;
   LinkedList * aux;
@@ -14,7 +14,7 @@ void freeLinkedList(LinkedList * first, void (*freeItem)(Item, int), int x)
   for(aux = first; aux != NULL; aux = next) 
   {
     next = aux->next;
-    freeItem(aux->this, x);
+    freemessage(aux->this, x);
     free(aux);
   }
   return;
@@ -29,15 +29,12 @@ LinkedList * getNextNodeLinkedList(LinkedList * node)
   }
 }
 
-Item getItemLinkedList(LinkedList * node)
+message getMessageLinkedList(LinkedList * node)
 {
-  if(node == NULL){
-	 return NULL;
-  }
   return node->this;
 }
 
-LinkedList * insertUnsortedLinkedList(LinkedList * first, Item this)
+LinkedList * insertUnsortedLinkedList(LinkedList * first, message this)
 {
   LinkedList *new;
 

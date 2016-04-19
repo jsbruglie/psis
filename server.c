@@ -1,5 +1,3 @@
-#include "psiskv.h"
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -10,6 +8,8 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+#include "LinkedList.h"
+
 
 #define forever() while(1)
 
@@ -23,7 +23,16 @@ void intHandler(int sock_fd){
 
 int main(int argc, char **argv){
 
+
+	LinkedList *lp;
+	LinkedList *aux;
+	lp = NULL;
+
+
+
 	message m;
+	message temp_msg;
+
 	int nbytes;
 
 	/* Configure CTR-C signal */
@@ -69,26 +78,43 @@ int main(int argc, char **argv){
 		/* Receive a message */
        	nbytes = recv(new_fd, &m, sizeof(message), 0); 
 		printf("Received %d bytes: %s with key %u \n", nbytes, m.value, m.key);
-
-		if(strcmp(m.value,"")){
+		
+		if(!strcmp(m.value,"")){
 
 			if(m.key == 30){
 				printf("Fetching a value for key %u...\n", m.key);
-				strcpy(m.value, "potato");
+
+				/*Iterate through the list*/
+				aux=lp;
+				while(aux != NULL){
+					temp_msg = getMessageLinkedList(aux);
+					if(temp_msg.key == m.key){
+						break;
+					}
+					aux=getNextNodeLinkedList(aux);
+				}
+
+
+				strcpy(m.value, temp_msg.value);
+
+
+
+
 				printf("Found value %s\n", m.value);
 				m.value[VALUE_LEN - 1] = '\0'; 	
         		nbytes = send(new_fd, &m, sizeof(message), 0);
 			}
 
 		}else{
-
+			/*Insert into the list*/
+			lp = insertUnsortedLinkedList(lp, m);
+			printf("succesful insert\n");
 			//Write to the list. If the write is succesful acknowledge the client
 			/*
 			strcpy(m.value, "s");
 			m.value[VALUE_LEN - 1] = '\0'; 	
     		nbytes = send(new_fd, &m, sizeof(message), 0);
 			*/
-
 		}
 
 

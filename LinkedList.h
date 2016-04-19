@@ -11,34 +11,34 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "defs.h"
+#include "psiskv.h"
 
 typedef struct LinkedListStruct LinkedList;
 
 /******************************************************************************
  * insertUnsortedLinkedList()
  *
- * Arguments: LinkedList* first, Item
+ * Arguments: LinkedList* first, message
  * Returns: LinkedList* node
- * Side-Effects: creates a new Node with an Item in it
+ * Side-Effects: creates a new Node with an message in it
  *
- * Description: inserts a new node containing Item the beggining of the list, unsorted, 
+ * Description: inserts a new node containing message the beggining of the list, unsorted, 
  *              returning a pointer to the first node of the list
  *
  *****************************************************************************/
-LinkedList * insertUnsortedLinkedList(LinkedList * first, Item this);
+LinkedList * insertUnsortedLinkedList(LinkedList * first, message this);
 
 /******************************************************************************
- * getItemLinkedList()
+ * getmessageLinkedList()
  *
  * Arguments: LinkedList* node
- * Returns: Item (void*)
+ * Returns: message (void*)
  * Side-Effects: none
  *
- * Description: returns the Item contained in the LinkedList* node argument
+ * Description: returns the message contained in the LinkedList* node argument
  *
  *****************************************************************************/
-Item getItemLinkedList(LinkedList * node);
+message getMessageLinkedList(LinkedList * node);
 
 /******************************************************************************
  * getNextNodeLinkedList()
@@ -54,15 +54,15 @@ LinkedList * getNextNodeLinkedList(LinkedList * node);
 /******************************************************************************
  * freeLinkedList()
  *
- * Arguments: LinkedList* first, void (*freeItem)(Item, int), int x)
+ * Arguments: LinkedList* first, void (*freemessage)(message, int), int x)
  * Returns: void
  * Side-Effects: Frees a LinkedList, all it's nodes and whatever they contain
  *
  * Description: Receives the pointer to the first node of the list and a function pointer
- *              to freeItems (together with it's arguments), and frees the LinkedList 
+ *              to freemessages (together with it's arguments), and frees the LinkedList 
  *              and it's data
  *
  *****************************************************************************/
-void freeLinkedList(LinkedList * first, void (*freeItem)(Item, int), int x);
+void freeLinkedList(LinkedList * first, void (*freemessage)(message, int), int x);
 
 #endif

@@ -1,5 +1,5 @@
-SVR_OBJECT_FILES = server.o psiskv.o
-CLT_OBJECT_FILES = client.o psiskv.o  
+SVR_OBJECT_FILES = server.o psiskv.o LinkedList.o
+CLT_OBJECT_FILES = client.o psiskv.o 
 
 CFLAGS = -ggdb -Wall -pthread
 LIBS = -lpthread 
@@ -13,7 +13,7 @@ client server:
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) $^ $(LIBS) -o $@  
 
-client.o server.o: psiskv.h  
+client.o server.o: psiskv.h LinkedList.h 
 
 %.o: %.c
 	$(CC) -c $<  
@@ -22,4 +22,4 @@ cleanup:
 	rm -f *.o
 
 clean:
-	rm -f client server *.o *~ 
+	rm -f client server psiskv *.o *~ 
