@@ -30,7 +30,7 @@ void intHandler(int sock_fd){
 	exit(0);
 }
 
-void* pthreadHandler(int kv_client_fd){
+void* pthreadHandler(int new_fd){
 
 	/* Receive a message */
     //nbytes = recv(new_fd, &m, sizeof(message), 0); 
@@ -47,43 +47,43 @@ void* pthreadHandler(int kv_client_fd){
 	int nbytes;
 
 	/* Tend to a single client */
-	// while ((nbytes = recv(new_fd, &m, sizeof(message), 0)) != 0){
+	while ((nbytes = recv(new_fd, &m, sizeof(message), 0)) != 0){
    		 
-	// 	printf("Received %d bytes: %s with key %u \n", nbytes, m.value, m.key);
+		printf("Received %d bytes: %s with key %u \n", nbytes, m.value, m.key);
 	
-	// 	if(!strcmp(m.value,"READ")) {
+		if(!strcmp(m.value,"READ")) {
 			
-	// 		printf("Read access requested for key %d\n", m.key);
-	// 		if(m.key == 30){
+			printf("Read access requested for key %d\n", m.key);
+			if(m.key == 30){
 				
-	// 			printf("Fetching a value for key %u...\n", m.key);
-	// 			/* Iterate through the list - This should really have its own function tbh */
-	// 			for(aux = lp; aux != NULL; aux = getNextNodeLinkedList(aux)){
-	// 				temp_kv = (kv_pair*) getItemLinkedList(aux);
-	// 				if(temp_kv->key == m.key){
-	// 					break;
-	// 				}
-	// 			}	
+				printf("Fetching a value for key %u...\n", m.key);
+				/* Iterate through the list - This should really have its own function tbh */
+				for(aux = lp; aux != NULL; aux = getNextNodeLinkedList(aux)){
+					temp_kv = (kv_pair*) getItemLinkedList(aux);
+					if(temp_kv->key == m.key){
+						break;
+					}
+				}	
 
-	// 			strcpy(m.value, temp_kv->value);
-	// 			printf("Found value %s\n", m.value);
-	// 			m.value[MAX_LEN - 1] = '\0'; 	
-	//     		nbytes = send(new_fd, &m, sizeof(message), 0); /* This is pretty messy */
-	// 		}
-	// 		break;
+				strcpy(m.value, temp_kv->value);
+				printf("Found value %s\n", m.value);
+				m.value[MAX_LEN - 1] = '\0'; 	
+	    		nbytes = send(new_fd, &m, sizeof(message), 0); /* This is pretty messy */
+			}
+			break;
 
-	// 	}else{
+		}else{
 			
-	// 		/* Insert into the list*/
-	// 		new_kv = kv_allocKvPair(m.key, m.value, strlen(m.value));
-	// 		lp = insertUnsortedLinkedList(lp, new_kv);
+			/* Insert into the list*/
+			new_kv = kv_allocKvPair(m.key, m.value, strlen(m.value));
+			lp = insertUnsortedLinkedList(lp, new_kv);
 			
-	// 		/* Test that the item has indeed been inserted */
-	// 		new_kv = (kv_pair*) getItemLinkedList(lp);
-	// 		printf("Succesful insertion of kv pair: %d %s\n", new_kv->key, new_kv->value);
-	// 	}
-	// }	
-	return NULL;
+			/* Test that the item has indeed been inserted */
+			new_kv = (kv_pair*) getItemLinkedList(lp);
+			printf("Succesful insertion of kv pair: %d %s\n", new_kv->key, new_kv->value);
+		}
+	}
+	pthread_exit(NULL);
 }
 
 int main(int argc, char **argv){
@@ -125,6 +125,8 @@ int main(int argc, char **argv){
  	
  	/* Create pool of threads */
 
+ 	pthread_t* thread_id = NULL;
+
 	listen(sock_fd, 20);	
 	forever(){
 		
@@ -137,43 +139,8 @@ int main(int argc, char **argv){
 			exit(-1);
 		}
 
-		/* Tend to a single client */
-		while ((nbytes = recv(new_fd, &m, sizeof(message), 0)) != 0){
-       		 
-			printf("Received %d bytes: %s with key %u \n", nbytes, m.value, m.key);
-		
-			if(!strcmp(m.value,"READ")) {
-				
-				printf("Read access requested for key %d\n", m.key);
-				if(m.key == 30){
-					
-					printf("Fetching a value for key %u...\n", m.key);
-					/* Iterate through the list - This should really have its own function tbh */
-					for(aux = lp; aux != NULL; aux = getNextNodeLinkedList(aux)){
-						temp_kv = (kv_pair*) getItemLinkedList(aux);
-						if(temp_kv->key == m.key){
-							break;
-						}
-					}	
-
-					strcpy(m.value, temp_kv->value);
-					printf("Found value %s\n", m.value);
-					m.value[MAX_LEN - 1] = '\0'; 	
-		    		nbytes = send(new_fd, &m, sizeof(message), 0); /* This is pretty messy */
-				}
-				break;
-
-			}else{
-				
-				/* Insert into the list*/
-				new_kv = kv_allocKvPair(m.key, m.value, strlen(m.value));
-				lp = insertUnsortedLinkedList(lp, new_kv);
-				
-				/* Test that the item has indeed been inserted */
-				new_kv = (kv_pair*) getItemLinkedList(lp);
-				printf("Succesful insertion of kv pair: %d %s\n", new_kv->key, new_kv->value);
-			}
-		}
+		pthread_create(thread_id, NULL, (void*)(*pthreadHandler) (new_fd), NULL);
+		pthread_join(*thread_id, NULL);	
 	}
 
 	exit(0);
