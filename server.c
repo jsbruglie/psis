@@ -14,7 +14,7 @@
 
 #define forever() while(1)
 
-/* Data structure for kv store */
+/* Global data structure for kv store */
 LinkedList* lp;
 
 /* Handle CTRL-C Signal: call signal(SIGINT, intHandler); in main*/
@@ -26,7 +26,64 @@ void intHandler(int sock_fd){
 	printf("\nSuccessfully closed and unlinked socket.\n");
 	/* Write kv store to file and delete memory? just free memory ?*/
 	freeLinkedList(lp, kv_freeKvPair);
+	printf("Successfully freed the list\n");
 	exit(0);
+}
+
+void* pthreadHandler(int kv_client_fd){
+
+	/* Receive a message */
+    //nbytes = recv(new_fd, &m, sizeof(message), 0); 
+	//printf("Received %d bytes: %s with key %u \n", nbytes, m.value, m.key);
+	/* Check flag to determine type of action */	
+	/* Do whatever is needed */
+	
+	LinkedList* aux;
+
+	message m;
+	kv_pair* temp_kv = NULL;
+	kv_pair* new_kv = NULL;
+
+	int nbytes;
+
+	/* Tend to a single client */
+	// while ((nbytes = recv(new_fd, &m, sizeof(message), 0)) != 0){
+   		 
+	// 	printf("Received %d bytes: %s with key %u \n", nbytes, m.value, m.key);
+	
+	// 	if(!strcmp(m.value,"READ")) {
+			
+	// 		printf("Read access requested for key %d\n", m.key);
+	// 		if(m.key == 30){
+				
+	// 			printf("Fetching a value for key %u...\n", m.key);
+	// 			/* Iterate through the list - This should really have its own function tbh */
+	// 			for(aux = lp; aux != NULL; aux = getNextNodeLinkedList(aux)){
+	// 				temp_kv = (kv_pair*) getItemLinkedList(aux);
+	// 				if(temp_kv->key == m.key){
+	// 					break;
+	// 				}
+	// 			}	
+
+	// 			strcpy(m.value, temp_kv->value);
+	// 			printf("Found value %s\n", m.value);
+	// 			m.value[MAX_LEN - 1] = '\0'; 	
+	//     		nbytes = send(new_fd, &m, sizeof(message), 0); /* This is pretty messy */
+	// 		}
+	// 		break;
+
+	// 	}else{
+			
+	// 		/* Insert into the list*/
+	// 		new_kv = kv_allocKvPair(m.key, m.value, strlen(m.value));
+	// 		lp = insertUnsortedLinkedList(lp, new_kv);
+			
+	// 		/* Test that the item has indeed been inserted */
+	// 		new_kv = (kv_pair*) getItemLinkedList(lp);
+	// 		printf("Succesful insertion of kv pair: %d %s\n", new_kv->key, new_kv->value);
+	// 	}
+	// }	
+	return NULL;
 }
 
 int main(int argc, char **argv){
@@ -61,7 +118,7 @@ int main(int argc, char **argv){
     /* Server bind */
  	int err = bind(sock_fd, (struct sockaddr *)&server_addr, sizeof(server_addr));
  	if(err == -1) {
-		perror("Bind: ");
+		perror("Sv - Bind: ");
 		exit(-1);
 	}
  	printf("Socket created and binded.\nReady to receive messages...\n");
@@ -71,52 +128,51 @@ int main(int argc, char **argv){
 	listen(sock_fd, 20);	
 	forever(){
 		
-		/* Perfrom accept - should be moved to a new handler function */
+		/* Perform accept - should be moved to a new handler function */
 		size_addr = sizeof(client_addr);	
 		int new_fd = accept(sock_fd,(struct sockaddr *)&client_addr, &size_addr);
 		printf("New file descriptor is %d\n", new_fd);
 		if(new_fd == -1){
-			perror("Accept: ");
+			perror("Sv - Accept: ");
 			exit(-1);
 		}
 
-		/* Receive a message */
-       	nbytes = recv(new_fd, &m, sizeof(message), 0); 
-		printf("Received %d bytes: %s with key %u \n", nbytes, m.value, m.key);
+		/* Tend to a single client */
+		while ((nbytes = recv(new_fd, &m, sizeof(message), 0)) != 0){
+       		 
+			printf("Received %d bytes: %s with key %u \n", nbytes, m.value, m.key);
 		
-		/* DEBUG */
-		if(!strcmp(m.value,"")) {
-
-			if(m.key == 30){
+			if(!strcmp(m.value,"READ")) {
 				
-				printf("Fetching a value for key %u...\n", m.key);
-				/* Iterate through the list - This should really have its own function tbh */
-				for(aux = lp; aux != NULL; aux = getNextNodeLinkedList(aux)){
-					temp_kv = (kv_pair*) getItemLinkedList(aux);
-					if(temp_kv->key == m.key){
-						break;
-					}
-				}	
+				printf("Read access requested for key %d\n", m.key);
+				if(m.key == 30){
+					
+					printf("Fetching a value for key %u...\n", m.key);
+					/* Iterate through the list - This should really have its own function tbh */
+					for(aux = lp; aux != NULL; aux = getNextNodeLinkedList(aux)){
+						temp_kv = (kv_pair*) getItemLinkedList(aux);
+						if(temp_kv->key == m.key){
+							break;
+						}
+					}	
 
-				strcpy(m.value, temp_kv->value);
-				printf("Found value %s\n", m.value);
-				m.value[MAX_LEN - 1] = '\0'; 	
-        		nbytes = send(new_fd, &m, sizeof(message), 0); /* This is pretty messy */
+					strcpy(m.value, temp_kv->value);
+					printf("Found value %s\n", m.value);
+					m.value[MAX_LEN - 1] = '\0'; 	
+		    		nbytes = send(new_fd, &m, sizeof(message), 0); /* This is pretty messy */
+				}
+				break;
+
+			}else{
+				
+				/* Insert into the list*/
+				new_kv = kv_allocKvPair(m.key, m.value, strlen(m.value));
+				lp = insertUnsortedLinkedList(lp, new_kv);
+				
+				/* Test that the item has indeed been inserted */
+				new_kv = (kv_pair*) getItemLinkedList(lp);
+				printf("Succesful insertion of kv pair: %d %s\n", new_kv->key, new_kv->value);
 			}
-
-		}else{
-			
-			/* Insert into the list*/
-			new_kv = kv_allocKvPair(m.key, m.value, strlen(m.value));
-			lp = insertUnsortedLinkedList(lp, new_kv);
-			
-			/* Test that the item has indeed been inserted */
-			new_kv = (kv_pair*) getItemLinkedList(lp);
-			printf("Succesful insertion of kv pair: %d %s\n", new_kv->key, new_kv->value);
-			
-			strcpy(m.value, "s");
-			m.value[MAX_LEN - 1] = '\0'; 	
-    		nbytes = send(new_fd, &m, sizeof(message), 0);
 		}
 	}
 

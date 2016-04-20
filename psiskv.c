@@ -79,8 +79,7 @@ int kv_write(int kv_descriptor, uint32_t key, char* value, int value_length){
 		perror("kv_write - Error sending: ");
 		return -1;
 	}
-	//printf("Sent %d bytes: %s with key %u \n", nbytes, m.value, m.key);
-
+	printf("Sent %d bytes: %s with key %u \n", nbytes, m.value, m.key);
 
 	//The server should return something to acknowledge
 	/*
@@ -109,7 +108,7 @@ int kv_read(int kv_descriptor, uint32_t key, char* value, int value_length){
 	message m;
 	int nbytes;
 
-	strcpy(m.value,"");
+	strcpy(m.value,"READ");
 	m.key = key;
 
 	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
@@ -117,7 +116,7 @@ int kv_read(int kv_descriptor, uint32_t key, char* value, int value_length){
 		perror("kv_read - Send: ");
 		return -1;
 	}
-
+	
 	nbytes = recv(kv_descriptor, &m, sizeof(message), 0);
 	if (nbytes == -1){
 		perror("kv_read - Recv: ");
