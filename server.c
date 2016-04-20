@@ -14,6 +14,8 @@
 
 #define forever() while(1)
 
+#define MAX_CLIENTS 10
+
 /* Global data structure for kv store */
 LinkedList* lp;
 
@@ -27,16 +29,16 @@ void intHandler(int sock_fd){
 	/* Write kv store to file and delete memory? just free memory ?*/
 	freeLinkedList(lp, kv_freeKvPair);
 	printf("Successfully freed the list\n");
-	exit(0);
+	pthread_exit(NULL);
 }
 
-void* pthreadHandler(int new_fd){
+void* pthreadHandler(void* thread_arg){
 
-	/* Receive a message */
-    //nbytes = recv(new_fd, &m, sizeof(message), 0); 
-	//printf("Received %d bytes: %s with key %u \n", nbytes, m.value, m.key);
-	/* Check flag to determine type of action */	
-	/* Do whatever is needed */
+	int* t_aux = (int*) thread_arg;
+	int new_fd = t_aux[0];
+	int thread_id = t_aux[1]; 
+
+	// printf(">>Thread number %ld\n", pthread_self());
 	
 	LinkedList* aux;
 
@@ -70,8 +72,6 @@ void* pthreadHandler(int new_fd){
 				m.value[MAX_LEN - 1] = '\0'; 	
 	    		nbytes = send(new_fd, &m, sizeof(message), 0); /* This is pretty messy */
 			}
-			break;
-
 		}else{
 			
 			/* Insert into the list*/
@@ -83,7 +83,7 @@ void* pthreadHandler(int new_fd){
 			printf("Succesful insertion of kv pair: %d %s\n", new_kv->key, new_kv->value);
 		}
 	}
-	pthread_exit(NULL);
+	pthread_exit((void*) thread_arg);
 }
 
 int main(int argc, char **argv){
@@ -125,23 +125,25 @@ int main(int argc, char **argv){
  	
  	/* Create pool of threads */
 
- 	pthread_t* thread_id = NULL;
+ 	pthread_t thread_id[MAX_CLIENTS];
+ 	int i = 0;
 
 	listen(sock_fd, 20);	
 	forever(){
-		
+
 		/* Perform accept - should be moved to a new handler function */
 		size_addr = sizeof(client_addr);	
 		int new_fd = accept(sock_fd,(struct sockaddr *)&client_addr, &size_addr);
-		printf("New file descriptor is %d\n", new_fd);
+		printf("New file descriptor is %d. Thread id is %d\n", new_fd, i);
 		if(new_fd == -1){
 			perror("Sv - Accept: ");
 			exit(-1);
 		}
+		int thread_arg[2];
+		thread_arg[0] = new_fd;
+		thread_arg[1] = i;
 
-		pthread_create(thread_id, NULL, (void*)(*pthreadHandler) (new_fd), NULL);
-		pthread_join(*thread_id, NULL);	
+		pthread_create(&(thread_id[i]), NULL, (void*) pthreadHandler, thread_arg);
+		pthread_join(thread_id[i++]);
 	}
-
-	exit(0);
 }

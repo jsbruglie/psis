@@ -31,7 +31,7 @@ typedef struct _kv_pair{
 	char* value;
 } kv_pair;
 
-int kv_freeKvPair(kv_pair* kv);
+int kv_freeKvPair(void* kv);
 kv_pair* kv_allocKvPair(uint32_t key, char* value, int value_length);
 
 /*

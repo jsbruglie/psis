@@ -3,7 +3,7 @@
 #include "psiskv.h"
 
 int main(){
-	/* DEBUG COMMUNICATION */
+	
 	char* val = "potato";
 	char read_val[MAX_LEN];
 	uint32_t key = 30;
@@ -13,6 +13,8 @@ int main(){
 
  	kv_write(kv_descriptor, key, val, strlen(val));
  	
+ 	sleep(5);
+
  	printf("Reading from server\n");
  	kv_read(kv_descriptor, key, read_val, strlen(read_val));
  	
