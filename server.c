@@ -1,19 +1,7 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-
-#include <stdlib.h>
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#include <signal.h>
-
 #include <pthread.h>
 
 #include "LinkedList.h"
 #include "psiskv.h"
-
-#define forever() while(1)
 
 #define MAX_CLIENTS 10
 
@@ -80,7 +68,8 @@ void* pthreadHandler(void* thread_arg){
 			printf("Succesful insertion of kv pair: %d %s\n", new_kv->key, new_kv->value);
 		}
 	}
-	pthread_exit((void*) thread_arg);
+	//pthread_exit((void*) thread_arg);
+	return 0;
 }
 
 int main(int argc, char **argv){
@@ -125,19 +114,25 @@ int main(int argc, char **argv){
  	pthread_t thread_id[MAX_CLIENTS];
  	int i = 0;
 
+ 	int client_fd;
 	listen(sock_fd, 20);	
-	forever(){
-
-		/* Perform accept - should be moved to a new handler function */
-		size_addr = sizeof(client_addr);	
-		int new_fd = accept(sock_fd,(struct sockaddr *)&client_addr, &size_addr);
-		printf("New file descriptor is %d. Thread id is %d\n", new_fd, i);
-		if(new_fd == -1){
+	size_addr = sizeof(client_addr);	
+		
+	while ( (client_fd = accept(sock_fd,(struct sockaddr *)&client_addr, &size_addr)) != 0){
+		printf("New file descriptor is %d. Thread id is %d\n", client_fd, i);
+		if(client_fd == -1){
 			perror("Sv - Accept: ");
 			exit(-1);
 		}
+		
+		pthread_attr_t attr;
 
-		pthread_create(&(thread_id[i]), NULL, (void*) pthreadHandler, (void*) &new_fd);
-		pthread_join(thread_id[i++], NULL);
+		/* Set the thread as detached, so that it will free its resources upon task completion - avoid memory leaks */
+		int rc;
+		rc = pthread_attr_init(&attr);
+		rc = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+		
+		pthread_create(&(thread_id[i++]), &attr, (void*) pthreadHandler, (void*) &client_fd);
 	}
+	//pthread_join(thread_id[0],NULL);
 }
