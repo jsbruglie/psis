@@ -2,6 +2,8 @@
 
 #include "psiskv.h"
 
+#include <unistd.h>
+
 int main(){
 	
 	char* val = "potato";

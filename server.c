@@ -7,7 +7,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <signal.h>
-#include <unistd.h>
+
+#include <pthread.h>
 
 #include "LinkedList.h"
 #include "psiskv.h"
@@ -34,12 +35,8 @@ void intHandler(int sock_fd){
 
 void* pthreadHandler(void* thread_arg){
 
-	int* t_aux = (int*) thread_arg;
-	int new_fd = t_aux[0];
-	int thread_id = t_aux[1]; 
+	int new_fd = *((int*) thread_arg);
 
-	// printf(">>Thread number %ld\n", pthread_self());
-	
 	LinkedList* aux;
 
 	message m;
@@ -139,11 +136,8 @@ int main(int argc, char **argv){
 			perror("Sv - Accept: ");
 			exit(-1);
 		}
-		int thread_arg[2];
-		thread_arg[0] = new_fd;
-		thread_arg[1] = i;
 
-		pthread_create(&(thread_id[i]), NULL, (void*) pthreadHandler, thread_arg);
-		pthread_join(thread_id[i++]);
+		pthread_create(&(thread_id[i]), NULL, (void*) pthreadHandler, (void*) &new_fd);
+		pthread_join(thread_id[i++], NULL);
 	}
 }

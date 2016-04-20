@@ -4,16 +4,20 @@
 	Header for the library that allows the connection between server and clients
 */
 
-#include <stdlib.h>
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#include <arpa/inet.h>
+
+#include <stdlib.h>
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <stdint.h>
+#include <unistd.h>
+	
 /* Defines */
 #define SOCK_ADDRESS "/tmp/psis_kv_sock"
 #define PORT 9999
