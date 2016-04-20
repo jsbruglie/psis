@@ -1,7 +1,19 @@
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
+#include <arpa/inet.h>
+
+#include <stdlib.h>
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <stdint.h>
+
 #include "psiskv.h"
 
 int kv_freeKvPair(void* kv){
-	
 	kv_pair* aux = (kv_pair*) kv;
 	free(aux->value);
 	free(aux);
@@ -11,7 +23,7 @@ int kv_freeKvPair(void* kv){
 kv_pair* kv_allocKvPair(uint32_t key, char* value, int value_length){
 	kv_pair* new_kv = malloc(sizeof(kv_pair));
 	new_kv->key = key;
-	new_kv->value = malloc(sizeof(char) * (value_length + 1)); /* value_length+1 ('\0') */
+	new_kv->value = malloc((sizeof(char) * value_length) + 1); /* value_length+1 ('\0') */
 	strcpy(new_kv->value, value);
 	new_kv->value[value_length] = '\0';
 	return new_kv;
@@ -62,7 +74,7 @@ int kv_write(int kv_descriptor, uint32_t key, char* value, int value_length){
 	int nbytes;
 	strcpy(m.value, value);
 	m.key = key;
-
+	m.flag = WRITE;
 	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
 	if (nbytes==-1){
 		perror("kv_write - Error sending: ");
@@ -99,7 +111,7 @@ int kv_read(int kv_descriptor, uint32_t key, char* value, int value_length){
 
 	strcpy(m.value,"READ");
 	m.key = key;
-
+	m.flag = READ;
 	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
 	if (nbytes == -1){
 		perror("kv_read - Send: ");

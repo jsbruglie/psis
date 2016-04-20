@@ -1,4 +1,4 @@
-SVR_OBJECT_FILES = server.o psiskv.o LinkedList.o
+SVR_OBJECT_FILES = server.o psiskv.o server_utils.o LinkedList.o 
 CLT_OBJECT_FILES = client.o psiskv.o 
 
 CFLAGS = -ggdb -Wall -pthread

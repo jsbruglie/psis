@@ -1,7 +1,6 @@
 #include <pthread.h>
 
-#include "LinkedList.h"
-#include "psiskv.h"
+#include "server_utils.h"
 
 #define MAX_CLIENTS 10
 
@@ -25,62 +24,24 @@ void* pthreadHandler(void* thread_arg){
 
 	int new_fd = *((int*) thread_arg);
 
-	LinkedList* aux;
-
 	message m;
-	kv_pair* temp_kv = NULL;
-	kv_pair* new_kv = NULL;
-
 	int nbytes;
 
 	/* Tend to a single client */
 	while ((nbytes = recv(new_fd, &m, sizeof(message), 0)) != 0){
-   		 
-		printf("Received %d bytes: %s with key %u \n", nbytes, m.value, m.key);
-	
-		if(!strcmp(m.value,"READ")) {
-			
-			printf("Read access requested for key %d\n", m.key);
-			if(m.key == 30){
-				
-				printf("Fetching a value for key %u...\n", m.key);
-				/* Iterate through the list - This should really have its own function tbh */
-				for(aux = lp; aux != NULL; aux = getNextNodeLinkedList(aux)){
-					temp_kv = (kv_pair*) getItemLinkedList(aux);
-					if(temp_kv->key == m.key){
-						break;
-					}
-				}	
-
-				strcpy(m.value, temp_kv->value);
-				printf("Found value %s\n", m.value);
-				m.value[MAX_LEN - 1] = '\0'; 	
-	    		nbytes = send(new_fd, &m, sizeof(message), 0); /* This is pretty messy */
-			}
-		}else{
-			
-			/* Insert into the list*/
-			new_kv = kv_allocKvPair(m.key, m.value, strlen(m.value));
-			lp = insertUnsortedLinkedList(lp, new_kv);
-			
-			/* Test that the item has indeed been inserted */
-			new_kv = (kv_pair*) getItemLinkedList(lp);
-			printf("Succesful insertion of kv pair: %d %s\n", new_kv->key, new_kv->value);
+ 
+		printf("Received %d bytes: %s with key %u and flag %d \n", nbytes, m.value, m.key, m.flag);
+		if(processRequest(new_fd, m, &lp)){
+			printf("Error reading or writing\n");
+		} //Send new_fd, message and the list pointer
+		if (lp == NULL){
+			printf("Something went wrong and the list is now NULL!\n");
 		}
 	}
 	//pthread_exit((void*) thread_arg);
-	return 0;
 }
 
 int main(int argc, char **argv){
-
-	LinkedList* aux;
-
-	message m;
-	kv_pair* temp_kv = NULL;
-	kv_pair* new_kv = NULL;
-
-	int nbytes;
 
 	/* Configure CTR-C signal */
 	signal(SIGINT, intHandler);

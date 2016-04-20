@@ -4,30 +4,33 @@
 	Header for the library that allows the connection between server and clients
 */
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-
-#include <arpa/inet.h>
-
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
-#include <signal.h>
 #include <stdint.h>
+
 #include <unistd.h>
-	
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
 /* Defines */
 #define SOCK_ADDRESS "/tmp/psis_kv_sock"
 #define PORT 9999
 
 #define MAX_LEN 100
 
+#define WRITE 1
+#define READ 0
+#define DELETE 2
+
 /* 	Data structures */
 typedef struct _message{
 	uint32_t key;
     char value[MAX_LEN];
+    int flag;
 } message;
 
 typedef struct _kv_pair{
