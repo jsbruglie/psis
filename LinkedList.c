@@ -2,22 +2,20 @@
 
 struct LinkedListStruct
 {
-  message this;
+  Item this;
   LinkedList * next;
 };
 
-void freeLinkedList(LinkedList * first, void (*freemessage)(message, int), int x)
-{
+int freeLinkedList(LinkedList * first, int (*freeItem)(Item)){
   LinkedList * next;
   LinkedList * aux;
 
-  for(aux = first; aux != NULL; aux = next) 
-  {
+  for(aux = first; aux != NULL; aux = next) {
     next = aux->next;
-    freemessage(aux->this, x);
+    freeItem(aux->this);
     free(aux);
   }
-  return;
+  return 0;
 }
 
 LinkedList * getNextNodeLinkedList(LinkedList * node)
@@ -29,18 +27,22 @@ LinkedList * getNextNodeLinkedList(LinkedList * node)
   }
 }
 
-message getMessageLinkedList(LinkedList * node)
+Item getItemLinkedList(LinkedList * node)
 {
+  if(node == NULL){
+	 return NULL;
+  }
   return node->this;
 }
 
-LinkedList * insertUnsortedLinkedList(LinkedList * first, message this)
+LinkedList * insertUnsortedLinkedList(LinkedList * first, Item this)
 {
   LinkedList *new;
 
   new = (LinkedList *) malloc(sizeof(LinkedList));
   if(new == NULL){
-    return first;
+    fprintf(stderr, "Error : Could not allocate memory for the list.\n");
+    exit(1);
   }
   new->this = this;
   new->next = first;

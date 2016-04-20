@@ -13,7 +13,20 @@
 
 #include "psiskv.h"
 
-// #include "psis_err.h"
+int kv_freeKvPair(kv_pair* kv){
+	free(kv->value);
+	free(kv);
+	return 0;
+}
+
+kv_pair* kv_allocKvPair(uint32_t key, char* value, int value_length){
+	kv_pair* new_kv = malloc(sizeof(kv_pair));
+	new_kv->key = key;
+	new_kv->value = malloc(sizeof(char) * value_length + 1); /* value_length+1 ('\0') */
+	strcpy(new_kv->value, value);
+	new_kv->value[value_length + 1] = '\0';
+	return new_kv;
+}
 
 int kv_connect(char* kv_server_ip, int kv_server_port){
 	
@@ -28,9 +41,7 @@ int kv_connect(char* kv_server_ip, int kv_server_port){
 	}
 	
 	server_addr.sin_family = AF_INET;
-
 	server_addr.sin_addr.s_addr = inet_addr(kv_server_ip); 	/* Set destination IP number - localhost, 127.0.0.1*/ 
-   	
 	server_addr.sin_port = htons(kv_server_port);                		/* Set destination port number */
 	
 	/* Connect to the server */
@@ -40,7 +51,6 @@ int kv_connect(char* kv_server_ip, int kv_server_port){
 		return -1;
 	}
 	return sock_fd;
-
 }
 
 /* 
@@ -58,9 +68,9 @@ void kv_close(int kv_descriptor){
 	Returns 0 on success, -1 on failure.
 */ 
 int kv_write(int kv_descriptor, uint32_t key, char* value, int value_length){
+	
 	message m;
 	int nbytes;
-
 	strcpy(m.value, value);
 	m.key = key;
 
@@ -94,6 +104,7 @@ int kv_write(int kv_descriptor, uint32_t key, char* value, int value_length){
 	Returns 0 on success, -1 on failure. If a value has previously been deleted, and there is an attempt to read it,it should result on error.  
 */
 int kv_read(int kv_descriptor, uint32_t key, char* value, int value_length){
+	
 	//Must write to make the server know and then read
 	message m;
 	int nbytes;
@@ -102,16 +113,21 @@ int kv_read(int kv_descriptor, uint32_t key, char* value, int value_length){
 	m.key = key;
 
 	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
-	if (nbytes==-1){
-		perror("kv_write - Write: ");
+	if (nbytes == -1){
+		perror("kv_read - Send: ");
 		return -1;
 	}
 
 	nbytes = recv(kv_descriptor, &m, sizeof(message), 0);
-	//printf("Received %d bytes. %s \n", nbytes, m.value);
+	if (nbytes == -1){
+		perror("kv_read - Recv: ");
+		return -1;
+	}
+	
+	printf("Received %d bytes. %s \n", nbytes, m.value);
 	strcpy(value, m.value);
+	
 	return 0;
-
 
 }
 

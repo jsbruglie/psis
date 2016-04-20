@@ -14,18 +14,25 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-
 /* Defines */
 #define SOCK_ADDRESS "/tmp/psis_kv_sock"
 #define PORT 9999
 
-#define VALUE_LEN 100
+#define MAX_LEN 100
 
 /* 	Data structures */
-typedef struct message{
+typedef struct _message{
 	uint32_t key;
-    char value[VALUE_LEN];
+    char value[MAX_LEN];
 } message;
+
+typedef struct _kv_pair{
+	uint32_t key;
+	char* value;
+} kv_pair;
+
+int kv_freeKvPair(kv_pair* kv);
+kv_pair* kv_allocKvPair(uint32_t key, char* value, int value_length);
 
 /*
 	int kv_connect
