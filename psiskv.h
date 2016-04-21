@@ -33,13 +33,6 @@ typedef struct _message{
     int flag;
 } message;
 
-typedef struct _kv_pair{
-	uint32_t key;
-	char* value;
-} kv_pair;
-
-int kv_freeKvPair(void* kv);
-kv_pair* kv_allocKvPair(uint32_t key, char* value, int value_length);
 
 /*
 	int kv_connect

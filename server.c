@@ -1,11 +1,14 @@
 #include <pthread.h>
-
 #include "server_utils.h"
 
 #define MAX_CLIENTS 10
 
 /* Global data structure for kv store */
 LinkedList* lp;
+
+/*Global hashtable*/
+Hashtable* _hashtable;
+unsigned long int size = 101;
 
 /* Handle CTRL-C Signal: call signal(SIGINT, intHandler); in main*/
 void intHandler(int sock_fd){
@@ -42,6 +45,9 @@ void* pthreadHandler(void* thread_arg){
 }
 
 int main(int argc, char **argv){
+	//Create our hashtable
+	_hashtable = createHashtable(size);
+	printf("Created the hashtable\n");
 
 	/* Configure CTR-C signal */
 	signal(SIGINT, intHandler);
