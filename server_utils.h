@@ -9,7 +9,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "LinkedList.h"
+#include "Hashtable.h"
 #include "psiskv.h"
 
 int processRequest(int new_fd, message m, LinkedList** lp);
@@ -17,3 +17,5 @@ int processRequest(int new_fd, message m, LinkedList** lp);
 int sv_write(int new_fd, message m, LinkedList** lp);
 
 int sv_read(int new_fd, message m, LinkedList** lp);
+
+int sv_delete(int new_fd, message m, LinkedList** lp);

@@ -13,22 +13,6 @@
 
 #include "psiskv.h"
 
-int kv_freeKvPair(void* kv){
-	kv_pair* aux = (kv_pair*) kv;
-	free(aux->value);
-	free(aux);
-	return 0;
-}
-
-kv_pair* kv_allocKvPair(uint32_t key, char* value, int value_length){
-	kv_pair* new_kv = malloc(sizeof(kv_pair));
-	new_kv->key = key;
-	new_kv->value = malloc((sizeof(char) * value_length) + 1); /* value_length+1 ('\0') */
-	strcpy(new_kv->value, value);
-	new_kv->value[value_length] = '\0';
-	return new_kv;
-}
-
 int kv_connect(char* kv_server_ip, int kv_server_port){
 	
 	struct sockaddr_in server_addr;	
