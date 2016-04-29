@@ -62,7 +62,7 @@ int hash(unsigned long int size, uint32_t key){
 kv_pair* hashtableRead(Hashtable* _hashtable, uint32_t key){
 	
 	LinkedList* list;
-	kv_pair* kv;
+	kv_pair* kv_aux, *kv;
 
 	if (_hashtable == NULL){
 		return NULL;
@@ -73,8 +73,9 @@ kv_pair* hashtableRead(Hashtable* _hashtable, uint32_t key){
 
 	pthread_mutex_lock(&(_hashtable->lock[hashval]));
 	for(list = _hashtable->table[hashval]; list != NULL; list = getNextNodeLinkedList(list)){
-		kv = (kv_pair*) getItemLinkedList(list);
-		if(kv->key == key){
+		kv_aux = (kv_pair*) getItemLinkedList(list);
+		if(kv_aux->key == key){
+			kv = kv_allocKvPair(key, kv_aux->value, kv_aux->value_length);
 			pthread_mutex_unlock(&(_hashtable->lock[hashval]));
 			return kv;
 		}
