@@ -103,7 +103,7 @@ int kv_write(int kv_descriptor, uint32_t key, char* value, int value_length, int
 	Returns 0 on success, -1 on failure. If a value has previously been deleted, and there is an attempt to read it,it should result on error.  
 */
 int kv_read(int kv_descriptor, uint32_t key, char* value, int value_length){
-	
+/*	
 	//Must write to make the server know and then read
 	message m;
 	int nbytes;
@@ -127,7 +127,8 @@ int kv_read(int kv_descriptor, uint32_t key, char* value, int value_length){
 	strcpy(value, m.value);
 	
 	return 0;
-
+*/
+	return 0;
 }
 
 /* 
