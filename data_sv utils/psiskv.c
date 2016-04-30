@@ -60,6 +60,7 @@ int kv_write(int kv_descriptor, uint32_t key, char* value, int value_length, int
 	message m;
 	int nbytes;
 	
+	m.value_length = value_length;
 	m.key = key;
 	if (kv_overwrite)
 		m.flag = WRITE;
