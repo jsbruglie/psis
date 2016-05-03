@@ -56,41 +56,43 @@ void kv_close(int kv_descriptor){
 int kv_write(int kv_descriptor, uint32_t key, char* value, int value_length, int kv_overwrite){
 	
 	int ret = 0;
-
-	message m;
 	int nbytes;
-	
-	m.value_length = value_length;
+	message m;
 	m.key = key;
-	if (kv_overwrite)
-		m.flag = WRITE;
-	else
-		m.flag = OVERWRITE;
+	m.value_length = value_length;	
 	
+	if (kv_overwrite == 0){  
+		m.flag = WRITE;
+	}else{
+		m.flag = OVERWRITE;
+	}
+
 	// Send a message with the key and the size of the data inserted
 	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
 	if (nbytes == -1){
 		perror("kv_write - Error sending key and size: ");
 		return ERROR;
 	}
+	printf("Request to server %d: FLAG %d KEY %d SIZE %d\n", kv_descriptor, m.flag, m.key, m.value_length); // DEBUG
 
 	nbytes = recv(kv_descriptor, &m, sizeof(message), 0);
 	if (nbytes == -1){
-		perror("kv_write - Failed to get answer from server: ");
+		perror("kv_write - Failed to get answer from server.\n"); //DEBUG
 		ret = ERROR;
 	}else if(m.flag == OVR_ERROR){
-		perror("kv_write - Overwrite Error: ");
+		printf("kv_write - Overwrite Error.\n"); //DEBUG
 		ret = OVR_ERROR;
 	}else if(m.flag == ERROR){
-		perror("kv_write - Error: ");
+		printf("kv_write - Error.\n"); // DEBUG
 		ret = ERROR;
 	}			
 	else{
+		printf("Response from server: %d.\n", m.flag);
 		// Send the actual data
-		nbytes = send(kv_descriptor, &m, value_length, 0);
+		nbytes = send(kv_descriptor, value, value_length, 0);
 		nbytes = recv(kv_descriptor, &m, sizeof(message), 0);
 		if (nbytes == -1){
-			perror("kv_write - Server unresponsive: ");
+			perror("kv_write - Server unresponsive: "); //DEBUG
 			ret = ERROR;
 		}	
 	}
@@ -137,6 +139,27 @@ int kv_read(int kv_descriptor, uint32_t key, char* value, int value_length){
 	Contacts the key_value store to delete the value corresponding to a given key.
 */
 int kv_delete(int kv_descriptor, uint32_t key){
+
+	int ret = 0;
+	int nbytes;
+	message m;
+	m.key = key;	
+	m.flag = DELETE;
+	m.value_length = -1;
+
+	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
+
+	printf("Request to server %d: FLAG %d KEY %d SIZE %d\n", kv_descriptor, m.flag, m.key, m.value_length); // DEBUG
+
+	nbytes = recv(kv_descriptor, &m, sizeof(message), 0);
+	if (nbytes == -1){
+		perror("kv_delete - Failed to get answer from server.\n"); // DEBUG
+		ret = ERROR;
+	}else if(m.flag == ERROR){
+		printf("kv_write - Error.\n"); // DEBUG
+		ret = ERROR;
+	}			
+	return ret;
 
 }
 

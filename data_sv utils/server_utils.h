@@ -12,10 +12,14 @@
 #include "Hashtable.h"
 #include "psiskv.h"
 
-int processRequest(int new_fd, message m, Hashtable* _hashtable);
+#define MAX_CLIENTS 10
+#define HASHTABLE_SIZE 3 
+#define MAX_BUFFER 1024
 
-int sv_write(int new_fd, message m, Hashtable* _hashtable);
+int processRequest(int client_fd, message m, Hashtable* _hashtable);
 
-int sv_read(int new_fd, message m, Hashtable* _hashtable);
+int sv_write(int client_fd, message m, Hashtable* _hashtable);
 
-int sv_delete(int new_fd, message m, Hashtable* _hashtable);
+int sv_read(int client_fd, message m, Hashtable* _hashtable);
+
+int sv_delete(int client_fd, message m, Hashtable* _hashtable);

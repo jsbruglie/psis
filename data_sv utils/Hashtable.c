@@ -12,7 +12,8 @@ kv_pair* kv_allocKvPair(uint32_t key, char* value, int value_length){
 	
 	kv_pair* new_kv = (kv_pair*) malloc(sizeof(kv_pair));
 	new_kv->key = key;
-	new_kv->value = value;
+	new_kv->value = (char*) malloc(sizeof(char) * value_length);
+	memcpy(new_kv->value, value, value_length);
 	new_kv->value_length = value_length;
 	return new_kv;
 }
@@ -61,20 +62,21 @@ int hash(unsigned long int size, uint32_t key){
 kv_pair* hashtableRead(Hashtable* _hashtable, uint32_t key){
 	
 	LinkedList* list;
-	kv_pair* kv_aux, *kv;
+	kv_pair* kv_aux;
+	kv_pair* kv;
 
 	if (_hashtable == NULL){
 		return NULL;
 	}
 
 	int hashval = hash(_hashtable->size, key);
-	printf("%d\n", hashval);
 
 	pthread_mutex_lock(&(_hashtable->lock[hashval]));
 	for(list = _hashtable->table[hashval]; list != NULL; list = getNextNodeLinkedList(list)){
 		kv_aux = (kv_pair*) getItemLinkedList(list);
 		if(kv_aux->key == key){
 			kv = kv_allocKvPair(key, kv_aux->value, kv_aux->value_length);
+			printf("Found kv_pair - key %d value %s of size %d.\n", kv->key, kv->value, kv->value_length);
 			pthread_mutex_unlock(&(_hashtable->lock[hashval]));
 			return kv;
 		}

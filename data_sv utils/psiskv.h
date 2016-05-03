@@ -1,4 +1,3 @@
-
 /*
 	psis_kv.h
 	Header for the library that allows the connection between server and clients
@@ -16,10 +15,11 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-/* Defines */
+// Defines
 #define SOCK_ADDRESS "/tmp/psis_kv_sock"
 #define PORT 9999
 
+#define DATA_PORT 9998
 #define MAX_SIZE 100
 
 // Client to server flags 
@@ -28,11 +28,9 @@
 #define OVERWRITE 2		// Attempt to write, with overwrite permission
 #define DELETE 3
 
-#define UNRESPONSIVE -3
-
 // Server to client flags
 #define RECEIVED 4
-#define WRITTEN 5		// Sucessfully written
+#define OK	0		// Sucessfully written
 #define ERROR -1 		// Unspecified error
 #define OVR_ERROR -2 	// Attempt to overwrite without permission
 
