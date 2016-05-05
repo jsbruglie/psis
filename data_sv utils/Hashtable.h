@@ -6,9 +6,8 @@
 #include <pthread.h>
 
 #include "LinkedList.h"
-
 #define ERROR -1
-#define HASHTABLE_SIZE 3
+
 #define MAX_BUFFER 1024
 
 typedef struct _kv_pair{
@@ -40,4 +39,8 @@ void freeHashtable(Hashtable* _hashtable);
 
 int writeBackupHashtable(Hashtable* _hashtable, char* filename);
 Hashtable* restoreFromFile(char* filename, int size);
+
+int lockHashtable(Hashtable* _hashtable);
+int unlockHashtable(Hashtable* _hashtable);
+
 void printHashtable(Hashtable* _hashtable);

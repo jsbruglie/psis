@@ -182,15 +182,15 @@ int writeBackupHashtable(Hashtable* _hashtable, char* filename){
 	for (i = 0; i < _hashtable->size; i++){
 		for(list = _hashtable->table[i]; list != NULL; list = getNextNodeLinkedList(list)){
 			temp_kv = (kv_pair*) getItemLinkedList(list);
-			if(fwrite((void*) &(temp_kv->key), sizeof(uint32_t), 1, fp) == -1){						// key
+			if(fwrite((void*) &(temp_kv->key), sizeof(uint32_t), 1, fp) == 0){						// key
 				ret = ERROR;
 				break;
 			}
-			if(fwrite((void*) &(temp_kv->value_length), sizeof(int), 1, fp) == -1){ 				// value_length
+			if(fwrite((void*) &(temp_kv->value_length), sizeof(int), 1, fp) == 0){ 				// value_length
 				ret = ERROR;
 				break;
 			} 
-			if(fwrite((void*) temp_kv->value, sizeof(char), temp_kv->value_length, fp) == -1){		// value
+			if(fwrite((void*) temp_kv->value, sizeof(char), temp_kv->value_length, fp) == 0){		// value
 				ret = ERROR;
 				break;
 			}
@@ -219,16 +219,16 @@ Hashtable* restoreFromFile(char* filename, int size){
 	}
 	
 	while(!feof(fp)){		
-		if(fread(&(key), sizeof(uint32_t), 1, fp) == 0){ 		// key
+		if(fread(&(key), sizeof(uint32_t), 1, fp) == 0){ 			// key
 			ret = ERROR;
 			break; 
 		}
-		if(fread(&(value_length), sizeof(int), 1, fp) == 0){	// value_length
+		if(fread(&(value_length), sizeof(int), 1, fp) == 0){		// value_length
 			ret = ERROR;
 			break;
 		}		
 		value = (char*) malloc(sizeof(char) * value_length);
-		if(fread(value, sizeof(char), value_length, fp) == 0){				// value
+		if(fread(value, sizeof(char), value_length, fp) == 0){		// value
 			ret = ERROR;
 			break;
 		}
@@ -239,7 +239,25 @@ Hashtable* restoreFromFile(char* filename, int size){
 	return _hashtable;
 }
 
+int lockHashtable(Hashtable* _hashtable){
+	int i;
+	if (_hashtable == NULL)
+		return ERROR;
+	for (i = 0; i < _hashtable->size; i++){
+		 pthread_mutex_lock(&(_hashtable->lock[i]));	
+	}
+	return 0;
+}		
 
+int unlockHashtable(Hashtable* _hashtable){
+	int i;
+	if (_hashtable == NULL)
+		return ERROR;
+	for (i = 0; i < _hashtable->size; i++){
+		 pthread_mutex_unlock(&(_hashtable->lock[i]));	
+	}
+}
+	
 // DEBUG
 void printHashtable(Hashtable* _hashtable){
 

@@ -33,10 +33,6 @@ int main(){
 	//ret = kv_delete(kv_descriptor, key);
 	//printf("kv_delete returned %d \n", ret);
 
-
-
-	//sleep(5);
-
  	//printf("Reading from server\n");
  	//kv_read(kv_descriptor, key, read_val, strlen(read_val));
  	
