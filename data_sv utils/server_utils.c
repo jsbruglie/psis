@@ -63,7 +63,6 @@ int sv_write(int client_fd, message m, Hashtable* _hashtable){
 
 	answer.flag = RECEIVED;
 	nbytes = send(client_fd, &answer, sizeof(message), 0);	
-	
 	nbytes = recv(client_fd, buffer, value_length, 0);
 	
 	// This is an extra step and is a bit repetitive
@@ -93,8 +92,31 @@ int sv_read(int client_fd, message m, Hashtable* _hashtable){
 	memset(&answer, 0, sizeof(message));
 	kv_pair* kv;	
 	char buffer[MAX_BUFFER];
-	
-	return 0;
+
+	uint32_t key = m.key;
+	int value_length = m.value_length;
+	if ((kv = hashtableRead(_hashtable, key)) == NULL){
+			answer.flag = ERROR;
+			printf("Couldn't read anything!\n");
+			send(client_fd, &answer, sizeof(message), 0);
+			ret = ERROR;
+	}else{
+		printf("Found a pair with key %u \n", kv->key);
+		answer.flag = OK;
+		answer.value_length = kv->value_length;
+		send(client_fd, &answer, sizeof(message), 0);
+
+		printf("Copying the answer...\n");
+		printf("The message value value_length is: %d\n", value_length);
+		printf("The lenght of the value read is: %d\n", answer.value_length);
+		memcpy(buffer, kv->value, answer.value_length); //estavas a usar value lenght e isso é -1, devias utilizar answer.value
+
+		printf("Sending the answer...\n");
+		send(client_fd, buffer, answer.value_length, 0);
+		kv_freeKvPair(kv);
+	}
+
+	return ret;
 }
 
 int sv_delete(int client_fd, message m, Hashtable* _hashtable){
@@ -115,4 +137,8 @@ int sv_delete(int client_fd, message m, Hashtable* _hashtable){
 	nbytes = send(client_fd, &answer, sizeof(message), 0);
 
 	return ret;
+}
+
+Hashtable* sv_restoreBackup(){
+	return NULL;
 }

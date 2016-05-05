@@ -106,32 +106,37 @@ int kv_write(int kv_descriptor, uint32_t key, char* value, int value_length, int
 	Returns 0 on success, -1 on failure. If a value has previously been deleted, and there is an attempt to read it,it should result on error.  
 */
 int kv_read(int kv_descriptor, uint32_t key, char* value, int value_length){
-/*	
-	//Must write to make the server know and then read
-	message m;
-	int nbytes;
 
-	strcpy(m.value,"READ");
+	int ret = 0;
+	int nbytes;
+	message m;
+	memset(&m, 0, sizeof(message));	
 	m.key = key;
 	m.flag = READ;
+	char buffer[MAX_BUFFER]; 
+
 	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
-	if (nbytes == -1){
-		perror("kv_read - Send: ");
-		return -1;
-	}
-	
+	printf("Request to server %d: FLAG %d KEY %d SIZE %d\n", kv_descriptor, m.flag, m.key, m.value_length); // DEBUG
+
 	nbytes = recv(kv_descriptor, &m, sizeof(message), 0);
 	if (nbytes == -1){
-		perror("kv_read - Recv: ");
-		return -1;
+		perror("kv_read - Failed to get answer from server.\n"); // DEBUG
+		ret = ERROR;
+	}else if(m.flag == ERROR){
+		printf("kv_read - Value not found\n"); // DEBUG
+		ret = ERROR;
 	}
-	
-	printf("Received %d bytes. %s \n", nbytes, m.value);
-	strcpy(value, m.value);
-	
-	return 0;
-*/
-	return 0;
+	else{
+		nbytes = recv(kv_descriptor, buffer, value_length, 0);
+		printf("\tFound %s\n",buffer);
+
+		memcpy(value, buffer, value_length); 
+
+
+		ret = 0;
+	}	
+
+	return ret;
 }
 
 /* 
@@ -148,7 +153,6 @@ int kv_delete(int kv_descriptor, uint32_t key){
 	m.value_length = -1;
 
 	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
-
 	printf("Request to server %d: FLAG %d KEY %d SIZE %d\n", kv_descriptor, m.flag, m.key, m.value_length); // DEBUG
 
 	nbytes = recv(kv_descriptor, &m, sizeof(message), 0);
@@ -156,7 +160,7 @@ int kv_delete(int kv_descriptor, uint32_t key){
 		perror("kv_delete - Failed to get answer from server.\n"); // DEBUG
 		ret = ERROR;
 	}else if(m.flag == ERROR){
-		printf("kv_write - Error.\n"); // DEBUG
+		printf("kv_delete - Error.\n"); // DEBUG
 		ret = ERROR;
 	}			
 	return ret;

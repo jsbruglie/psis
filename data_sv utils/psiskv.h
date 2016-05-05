@@ -20,7 +20,8 @@
 #define PORT 9999
 
 #define DATA_PORT 9998
-#define MAX_SIZE 100
+#define MAX_BUFFER 1024
+
 
 // Client to server flags 
 #define READ 0

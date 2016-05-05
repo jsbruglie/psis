@@ -16,6 +16,7 @@ void intHandler(int sock_fd){
 	// Close and unlink socket
 	close(sock_fd);
 	printf("\nSuccessfully closed socket.\n"); //DEUG
+	writeBackupHashtable(hashtable, "backup.bin");
 	freeHashtable(hashtable);
 	// TODO - Perform proper cleanup
 	// TODO - Backup
@@ -55,9 +56,11 @@ void* clientHandler(void* pthread_arg){
 
 int main(int argc, char **argv){
 	
-	// Create the hashtable
-	hashtable = createHashtable(HASHTABLE_SIZE);
-
+	// Read backup
+	hashtable = restoreFromFile("backup.bin", HASHTABLE_SIZE);
+	//hashtable = createHashtable(HASHTABLE_SIZE);
+	printHashtable(hashtable);
+	
 	// Configure CTR-C signal
 	signal(SIGINT, intHandler);
 	

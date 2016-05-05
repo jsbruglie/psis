@@ -18,7 +18,7 @@ kv_pair* kv_allocKvPair(uint32_t key, char* value, int value_length){
 	return new_kv;
 }
 
-Hashtable* createHashtable(unsigned long int size){
+Hashtable* createHashtable(int size){
 	
 	if(size < 1) 
 		return NULL;
@@ -54,9 +54,9 @@ Hashtable* createHashtable(unsigned long int size){
 }
 
 // Temporary not so great hash
-int hash(unsigned long int size, uint32_t key){
+int hash(int size, uint32_t key){
 	uint32_t hashval = key * (key + 3) * 0.5;
-	return hashval%(size);
+	return hashval % size;
 }
 
 kv_pair* hashtableRead(Hashtable* _hashtable, uint32_t key){
@@ -170,6 +170,76 @@ void freeHashtable(Hashtable* _hashtable){
 	free(_hashtable);
 }
 
+int writeBackupHashtable(Hashtable* _hashtable, char* filename){
+	
+	FILE* fp;
+	LinkedList* list;
+	kv_pair* temp_kv;
+	int ret = 0;
+	int i;
+
+	fp = fopen(filename, "w");  	
+	for (i = 0; i < _hashtable->size; i++){
+		for(list = _hashtable->table[i]; list != NULL; list = getNextNodeLinkedList(list)){
+			temp_kv = (kv_pair*) getItemLinkedList(list);
+			if(fwrite((void*) &(temp_kv->key), sizeof(uint32_t), 1, fp) == -1){						// key
+				ret = ERROR;
+				break;
+			}
+			if(fwrite((void*) &(temp_kv->value_length), sizeof(int), 1, fp) == -1){ 				// value_length
+				ret = ERROR;
+				break;
+			} 
+			if(fwrite((void*) temp_kv->value, sizeof(char), temp_kv->value_length, fp) == -1){		// value
+				ret = ERROR;
+				break;
+			}
+		}
+	}
+	fclose(fp); 
+	return ret;
+}
+
+Hashtable* restoreFromFile(char* filename, int size){
+
+	FILE* fp;
+	Hashtable* _hashtable;
+	LinkedList* list;
+	kv_pair* temp_kv;
+	int ret = 0;
+
+	uint32_t key;
+	int value_length;
+	char* value;
+
+	fp = fopen(filename, "r");
+	_hashtable = createHashtable(size);	
+	if (fp == NULL){
+		return _hashtable;  
+	}
+	
+	while(!feof(fp)){		
+		if(fread(&(key), sizeof(uint32_t), 1, fp) == 0){ 		// key
+			ret = ERROR;
+			break; 
+		}
+		if(fread(&(value_length), sizeof(int), 1, fp) == 0){	// value_length
+			ret = ERROR;
+			break;
+		}		
+		value = (char*) malloc(sizeof(char) * value_length);
+		if(fread(value, sizeof(char), value_length, fp) == 0){				// value
+			ret = ERROR;
+			break;
+		}
+		hashtableWrite(_hashtable, key, value, value_length, 0);
+		free(value);
+	}
+	fclose(fp);
+	return _hashtable;
+}
+
+
 // DEBUG
 void printHashtable(Hashtable* _hashtable){
 
@@ -183,7 +253,7 @@ void printHashtable(Hashtable* _hashtable){
 		pthread_mutex_lock(&(_hashtable->lock[i]));
 		for(list = _hashtable->table[i]; list != NULL; list = getNextNodeLinkedList(list)){
 			temp_kv = (kv_pair*) getItemLinkedList(list);
-			printf("%d->%s ", temp_kv->key, temp_kv->value);
+			printf("%d->%s ", temp_kv->key, (char*) temp_kv->value);
 		}
 		pthread_mutex_unlock(&(_hashtable->lock[i]));
 		printf("\n");

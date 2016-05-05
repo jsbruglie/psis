@@ -6,24 +6,34 @@
 
 int main(){
 	
-	char* val = "potato";
-	char read_val[100];
-	uint32_t key = 30;
-
+	char read_val[MAX_BUFFER];
+	int ret;
+	
 	printf("Connecting to server\n");
 	int kv_descriptor = kv_connect("127.0.0.1",9998); // This descriptor is what the API will use from now on
 
- 	int ret = kv_write(kv_descriptor, key, val, strlen(val) + 1, 0);
+ 	ret = kv_write(kv_descriptor, 1, "a", (strlen("a") + 1) * sizeof(char), 0);
  	printf("kv_write returned %d \n", ret);
-
-	ret = kv_write(kv_descriptor, key, val, strlen(val) + 1, 0);
+	
+	ret = kv_write(kv_descriptor, 2, "ab", (strlen("ab") + 1) * sizeof(char), 0);
+ 	printf("kv_write returned %d \n", ret);
+	
+	ret = kv_write(kv_descriptor, 3, "abc", (strlen("abc") + 1) * sizeof(char), 0);
 	printf("kv_write returned %d \n", ret);
 
-	ret = kv_delete(kv_descriptor, key);
-	printf("kv_delete returned %d \n", ret);
+	//ret = kv_write(kv_descriptor, key, val, (strlen(val) + 1) * sizeof(char), 0);
+	//printf("kv_write returned %d \n", ret);
+
+	//ret = kv_read(kv_descriptor, key, read_val, MAX_BUFFER * sizeof(char));
+	//printf("kv_read returned %d : %s  \n", ret, read_val);
+
+	//ret = kv_delete(kv_descriptor, key);
+	//printf("kv_delete returned %d \n", ret);
 	
-	ret = kv_delete(kv_descriptor, key);
-	printf("kv_delete returned %d \n", ret);
+	//ret = kv_delete(kv_descriptor, key);
+	//printf("kv_delete returned %d \n", ret);
+
+
 
 	//sleep(5);
 
