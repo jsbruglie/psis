@@ -1,6 +1,6 @@
 #include "server_utils.h"
 
-int processRequest(int client_fd, message m, Hashtable* _hashtable){
+int processRequest(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pthread_mutex_t* log_lock){
 
 	int ret;
 	if(m.flag == READ) { // READ
@@ -14,7 +14,7 @@ int processRequest(int client_fd, message m, Hashtable* _hashtable){
 		}
 
 	}else if(m.flag == WRITE || m.flag == OVERWRITE){ // WRITE
-		if( (ret = sv_write(client_fd, m, _hashtable)) != 0){
+		if( (ret = sv_write(client_fd, m, _hashtable, log_fp, log_lock)) != 0){
 			if(ret == OVR_ERROR ){
 				printf("\tprocessRequest - sv_write - Overwrite not allowed.\n"); // DEBUG
 			}
@@ -25,7 +25,7 @@ int processRequest(int client_fd, message m, Hashtable* _hashtable){
 		}
 		
 	}else if(m.flag == DELETE){ // DELETE 
-		if (sv_delete(client_fd, m, _hashtable) != 0){
+		if (sv_delete(client_fd, m, _hashtable, log_fp, log_lock) != 0){
 			printf("\tprocessRequest - sv_delete\n"); // DEBUG
 			return -1;
 		}
@@ -33,7 +33,34 @@ int processRequest(int client_fd, message m, Hashtable* _hashtable){
 	return 0;
 }
 
-int sv_write(int client_fd, message m, Hashtable* _hashtable){
+int sv_read(int client_fd, message m, Hashtable* _hashtable){
+	
+	int ret = 0;
+	int nbytes;
+	message answer;
+	memset(&answer, 0, sizeof(message));
+	kv_pair* kv;	
+	char buffer[MAX_BUFFER];
+
+	uint32_t key = m.key;
+	int value_length = m.value_length;
+	if ((kv = hashtableRead(_hashtable, key)) == NULL){
+		answer.flag = ERROR;
+		send(client_fd, &answer, sizeof(message), 0);
+		ret = ERROR;
+	}else{
+		answer.flag = OK;
+		answer.value_length = kv->value_length;
+		send(client_fd, &answer, sizeof(message), 0);
+		memcpy(buffer, kv->value, answer.value_length); 
+		send(client_fd, buffer, answer.value_length, 0);
+		kv_freeKvPair(kv);
+	}
+
+	return ret;
+}
+
+int sv_write(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pthread_mutex_t* log_lock){
 	
 	int ret = 0;
 	int nbytes;
@@ -65,11 +92,9 @@ int sv_write(int client_fd, message m, Hashtable* _hashtable){
 	nbytes = send(client_fd, &answer, sizeof(message), 0);	
 	nbytes = recv(client_fd, buffer, value_length, 0);
 	
-	// This is an extra step and is a bit repetitive
 	char* value = malloc(sizeof(char) * value_length);
 	memcpy(value, buffer, value_length);
 
-	// if(hashtableWrite(_hashtable, key, buffer, value_length, overwrite) == 0)
 	if(hashtableWrite(_hashtable, key, value, value_length, overwrite) == 0){
 		answer.flag = OK;
 		answer.key = value_length;
@@ -77,49 +102,16 @@ int sv_write(int client_fd, message m, Hashtable* _hashtable){
 		answer.flag = ERROR;
 		answer.key = 0;	
 		ret = ERROR;
-	}	
+	}
+
 	nbytes = send(client_fd, &answer, sizeof(message), 0);
-		printf("\tInserted %d - %s in Hashtable.\n", key, value); // DEBUG
+	printf("\tInserted %d - %s in Hashtable.\n", key, value); // DEBUG
+	logEntry(log_fp, log_lock, WRITE, key,value, value_length);
 	free(value);
 	return ret;
 }
 
-int sv_read(int client_fd, message m, Hashtable* _hashtable){
-	
-	int ret = 0;
-	int nbytes;
-	message answer;
-	memset(&answer, 0, sizeof(message));
-	kv_pair* kv;	
-	char buffer[MAX_BUFFER];
-
-	uint32_t key = m.key;
-	int value_length = m.value_length;
-	if ((kv = hashtableRead(_hashtable, key)) == NULL){
-			answer.flag = ERROR;
-			printf("Couldn't read anything!\n");
-			send(client_fd, &answer, sizeof(message), 0);
-			ret = ERROR;
-	}else{
-		printf("Found a pair with key %u \n", kv->key);
-		answer.flag = OK;
-		answer.value_length = kv->value_length;
-		send(client_fd, &answer, sizeof(message), 0);
-
-		printf("Copying the answer...\n");
-		printf("The message value value_length is: %d\n", value_length);
-		printf("The lenght of the value read is: %d\n", answer.value_length);
-		memcpy(buffer, kv->value, answer.value_length); //estavas a usar value lenght e isso é -1, devias utilizar answer.value
-
-		printf("Sending the answer...\n");
-		send(client_fd, buffer, answer.value_length, 0);
-		kv_freeKvPair(kv);
-	}
-
-	return ret;
-}
-
-int sv_delete(int client_fd, message m, Hashtable* _hashtable){
+int sv_delete(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pthread_mutex_t* log_lock){
 	
 	int ret = 0;
 	int nbytes;
@@ -135,10 +127,69 @@ int sv_delete(int client_fd, message m, Hashtable* _hashtable){
 		answer.flag = OK;
 	}
 	nbytes = send(client_fd, &answer, sizeof(message), 0);
-
+	logEntry(log_fp, log_lock, DELETE, key, NULL, -1);
 	return ret;
 }
 
-Hashtable* sv_restoreBackup(){
-	return NULL;
+int logEntry(FILE* log_fp, pthread_mutex_t* log_lock, int flag, int key, char* value, int value_length){
+	
+	pthread_mutex_lock(log_lock);
+	if(fwrite((void*) &flag, sizeof(int), 1, log_fp) == 0){}			// flag
+	if(fwrite((void*) &key, sizeof(uint32_t), 1, log_fp) == 0){}		// key 
+	if(fwrite((void*) &value_length, sizeof(int), 1, log_fp) == 0){}	// value_length
+	
+	if (flag == WRITE){
+		if(fwrite((void*) value, sizeof(char), value_length, log_fp) == 0){} 
+	}
+	pthread_mutex_unlock(log_lock);
+	return 0;
+}
+
+FILE* processLogEntries(char* filename, Hashtable* _hashtable){
+	
+	FILE* fp;
+	int ret = 0;
+	uint32_t key;
+	int flag;
+	int value_length;
+	char* value;
+
+	fp = fopen(filename, "r");
+	if (fp != NULL){
+			
+		while(!feof(fp)){		
+			if(fread(&(flag), sizeof(int), 1, fp) == 0){ 					// flag	
+				ret = ERROR;
+				break; 
+			}
+			if(fread(&(key), sizeof(int), 1, fp) == 0){						// key
+				ret = ERROR;
+				break;
+			}
+			if(flag == WRITE){
+				if(fread(&(value_length), sizeof(int), 1, fp) == 0){		// value_length
+					ret = ERROR;
+					break;
+				}		
+				value = (char*) malloc(sizeof(char) * value_length);
+				if(fread(value, sizeof(char), value_length, fp) == 0){		// value
+					ret = ERROR;
+					break;
+				}
+				hashtableWrite(_hashtable, key, value, value_length, 0);
+				free(value);
+			
+			}else if(flag == DELETE){
+				hashtableDelete(_hashtable, key);
+			}
+		}
+		fclose(fp);
+	}
+	return fopen(filename, "w");
+}
+
+FILE* eraseLog(FILE* log_fp, char* file_name){
+	if (log_fp != NULL)
+		fclose(log_fp);
+	return fopen(file_name, "w");
 }

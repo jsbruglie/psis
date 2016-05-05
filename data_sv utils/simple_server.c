@@ -3,23 +3,36 @@
 // Global hashtable
 Hashtable* hashtable;
 
+// Logging related variables
+pthread_mutex_t log_lock;
+FILE* log_fp;
+
 // Threadpool global variables
-pthread_mutex_t pool_lock;
-int ready_count;
+// pthread_mutex_t pool_lock;
+// int ready_count;
 
 // Socket global variables
 int sock_fd;
+
+// Perform a backup
+int backup(){
+	lockHashtable(hashtable);	
+	writeBackupHashtable(hashtable, BACKUP_FILE);	
+	pthread_mutex_lock(&log_lock);
+	log_fp = eraseLog(log_fp, LOG_FILE);
+	pthread_mutex_unlock(&log_lock);
+	unlockHashtable(hashtable);
+}
 
 // Handle CTRL-C Signal: call signal(SIGINT, intHandler); in main
 void intHandler(int sock_fd){
 	
 	// Close and unlink socket
 	close(sock_fd);
-	printf("\nSuccessfully closed socket.\n"); //DEUG
-	writeBackupHashtable(hashtable, "backup.bin");
+	printf("\nSuccessfully closed socket.\n"); // DEBUG
+	backup();	
 	freeHashtable(hashtable);
-	// TODO - Perform proper cleanup
-	// TODO - Backup
+	fclose(log_fp);
 	exit(0);
 }
 
@@ -36,8 +49,7 @@ void* clientHandler(void* pthread_arg){
 	int nbytes;
 
 	// Tend to a single client
-
-	client_fd = accept(sock_fd,(struct sockaddr *)&client_addr, &size_addr);
+	client_fd = accept(sock_fd,(struct sockaddr*) &client_addr, &size_addr);
 	
 	if(client_fd == -1){
 		perror("Data Sv - Accept: ");
@@ -46,7 +58,7 @@ void* clientHandler(void* pthread_arg){
 	
 	while ((nbytes = recv(client_fd, &m, sizeof(message), 0)) != 0){
 		printf("Request from client %d: FLAG %d KEY %d SIZE %d\n", client_fd, m.flag, m.key, m.value_length); 
-		if((ret = processRequest(client_fd, m, hashtable)) != 0){
+		if((ret = processRequest(client_fd, m, hashtable, log_fp, &log_lock)) != 0){
 			printf("Data Sv - Request was not fulfilled. Return value %d.\n", ret); //DEBUG
 		}
 		printHashtable(hashtable);
@@ -57,10 +69,15 @@ void* clientHandler(void* pthread_arg){
 int main(int argc, char **argv){
 	
 	// Read backup
-	hashtable = restoreFromFile("backup.bin", HASHTABLE_SIZE);
-	//hashtable = createHashtable(HASHTABLE_SIZE);
+	hashtable = (Hashtable*) restoreFromFile("backup.bin", HASHTABLE_SIZE);
 	printHashtable(hashtable);
 	
+	// Open log file and apply entries to the hashtable. Initialize log file mutex lock
+	log_fp = (FILE*) processLogEntries(LOG_FILE, hashtable);
+	pthread_mutex_init(&log_lock, NULL);	
+	
+	printHashtable(hashtable);
+
 	// Configure CTR-C signal
 	signal(SIGINT, intHandler);
 	

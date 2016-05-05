@@ -15,7 +15,17 @@
 #define MAX_CLIENTS 10
 #define HASHTABLE_SIZE 3 
 
-int processRequest(int client_fd, message m, Hashtable* _hashtable);
-int sv_write(int client_fd, message m, Hashtable* _hashtable);
+#define BACKUP_FILE "backup.bin"
+#define LOG_FILE "log.bin"
+
+int processRequest(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pthread_mutex_t* log_lock);
 int sv_read(int client_fd, message m, Hashtable* _hashtable);
-int sv_delete(int client_fd, message m, Hashtable* _hashtable);
+int sv_write(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pthread_mutex_t* log_lock);
+int sv_delete(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pthread_mutex_t* log_lock);
+
+// Logging Functions
+
+// Opens the log file and process each entry
+FILE* processLogEntries(char* filename, Hashtable* _hashtable);
+int logEntry(FILE* log_fp, pthread_mutex_t* log_lock, int flag, int key, char* value, int value_length);
+FILE* eraseLog(FILE* log_fp, char* file_name);

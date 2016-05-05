@@ -37,10 +37,13 @@ int hashtableWrite(Hashtable* _hashtable, uint32_t key, char* value, int value_l
 int hashtableDelete(Hashtable* _hashtable, uint32_t key);
 void freeHashtable(Hashtable* _hashtable);
 
+// backup and restore functions
 int writeBackupHashtable(Hashtable* _hashtable, char* filename);
 Hashtable* restoreFromFile(char* filename, int size);
 
+// generic use mutex lock and unlock functions
 int lockHashtable(Hashtable* _hashtable);
 int unlockHashtable(Hashtable* _hashtable);
 
+// DEBUG
 void printHashtable(Hashtable* _hashtable);
