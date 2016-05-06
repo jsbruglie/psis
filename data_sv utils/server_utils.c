@@ -82,7 +82,6 @@ int sv_write(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pthr
 	}	
 
 	int overwrite = (m.flag == OVERWRITE);  
-	
 	if (overwrite == 0){
 		if ((kv = hashtableRead(_hashtable, key)) != NULL){
 			answer.flag = OVR_ERROR;
@@ -141,9 +140,8 @@ int logEntry(FILE* log_fp, pthread_mutex_t* log_lock, int flag, int key, char* v
 	if(fwrite((void*) &flag, sizeof(int), 1, log_fp) == 0){}		// flag
 	if(fwrite((void*) &key, sizeof(uint32_t), 1, log_fp) == 0){}		// key 
 	if(fwrite((void*) &value_length, sizeof(int), 1, log_fp) == 0){}	// value_length
-	
 	if (flag == WRITE){
-		if(fwrite((void*) value, sizeof(char), value_length, log_fp) == 0){} 
+		if(fwrite((void*) value, sizeof(char), value_length, log_fp) == 0){}	// value 
 	}
 	pthread_mutex_unlock(log_lock);
 	return 0;
