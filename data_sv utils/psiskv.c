@@ -29,7 +29,7 @@ int kv_connect(char* kv_server_ip, int kv_server_port){
 	
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = inet_addr(kv_server_ip); 		// Set destination IP number - localhost, 127.0.0.1 // 
-	server_addr.sin_port = htons(kv_server_port);               	// Set destination port number //
+	server_addr.sin_port = htons(kv_server_port);               // Set destination port number //
 	
 	// Connect to the server
 	err = connect(sock_fd, (const struct sockaddr *) &server_addr, sizeof(server_addr));
@@ -74,28 +74,17 @@ int kv_write(int kv_descriptor, uint32_t key, char* value, int value_length, int
 		return ERROR;
 	}
 	printf("Request to server %d: FLAG %d KEY %d SIZE %d\n", kv_descriptor, m.flag, m.key, m.value_length); // DEBUG
-
+				
+	// Send the actual data
+	nbytes = send(kv_descriptor, value, value_length, 0);
 	nbytes = recv(kv_descriptor, &m, sizeof(message), 0);
 	if (nbytes == -1){
-		perror("kv_write - Failed to get answer from server.\n"); //DEBUG
+		perror("kv_write - Server unresponsive: "); //DEBUG
 		ret = ERROR;
-	}else if(m.flag == OVR_ERROR){
-		printf("kv_write - Overwrite Error.\n"); //DEBUG
-		ret = OVR_ERROR;
-	}else if(m.flag == ERROR){
-		printf("kv_write - Error.\n"); // DEBUG
-		ret = ERROR;
-	}			
+	}	
 	else{
-		printf("Response from server: %d.\n", m.flag);
-		// Send the actual data
-		nbytes = send(kv_descriptor, value, value_length, 0);
-		nbytes = recv(kv_descriptor, &m, sizeof(message), 0);
-		if (nbytes == -1){
-			perror("kv_write - Server unresponsive: "); //DEBUG
-			ret = ERROR;
-		}	
-	}
+		ret = m.flag;
+	}		
 	return ret;
 }
 

@@ -2,7 +2,7 @@
 
 int processRequest(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pthread_mutex_t* log_lock){
 
-	int ret;
+	int ret = 0;
 	if(m.flag == READ) { // READ
 		if((ret = sv_read(client_fd, m, _hashtable)) != 0){
 			if (ret == 1){
@@ -10,8 +10,7 @@ int processRequest(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp
 			}else{
 				printf("\tprocessRequest - sv_read\n"); // DEBUG
 			}
-			return ret;
-		}
+	}
 
 	}else if(m.flag == WRITE || m.flag == OVERWRITE){ // WRITE
 		if( (ret = sv_write(client_fd, m, _hashtable, log_fp, log_lock)) != 0){
@@ -21,16 +20,14 @@ int processRequest(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp
 			else{
 				printf("\tprocessRequest - sv_write\n"); // DEBUG
 			}
-			return ret;
 		}
-		
 	}else if(m.flag == DELETE){ // DELETE 
 		if (sv_delete(client_fd, m, _hashtable, log_fp, log_lock) != 0){
 			printf("\tprocessRequest - sv_delete\n"); // DEBUG
-			return -1;
+			ret = -1;
 		}
 	}
-	return 0;
+	return ret;
 }
 
 int sv_read(int client_fd, message m, Hashtable* _hashtable){
@@ -71,41 +68,30 @@ int sv_write(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pthr
 	message answer;
 	memset(&answer, 0, sizeof(message));
 	kv_pair* kv;	
-	char buffer[MAX_BUFFER];
-
+	char* value ;
+	
 	uint32_t key = m.key;
 	int value_length = m.value_length;
-	if (value_length < 0){						// TODO - or value_lenght > MAX_BUFFER
+	int overwrite = (m.flag == OVERWRITE);
+	if (value_length < 0){								
 		answer.flag = ERROR;
-    	send(client_fd, &m, sizeof(message), 0);
+    	send(client_fd, &answer, sizeof(message), 0);
 		return ERROR;
 	}	
-
-	int overwrite = (m.flag == OVERWRITE);  
-	if (overwrite == 0){
-		if ((kv = hashtableRead(_hashtable, key)) != NULL){
-			answer.flag = OVR_ERROR;
-			send(client_fd, &answer, sizeof(message), 0);
-			kv_freeKvPair(kv);
-			return OVR_ERROR;
-		}
-	}
-
-	answer.flag = RECEIVED;
-	nbytes = send(client_fd, &answer, sizeof(message), 0);	
-	nbytes = recv(client_fd, buffer, value_length, 0);
 	
-	char* value = malloc(sizeof(char) * value_length);
-	memcpy(value, buffer, value_length);
+	value = malloc(sizeof(char) * value_length);
+	
+	// Receive the actual value
+	nbytes = recv(client_fd, value, value_length, 0);
+	memcpy(value, value, value_length);
+		
 
-	if(hashtableWrite(_hashtable, key, value, value_length, overwrite) == 0){
-		answer.flag = OK;
+	if((ret = hashtableWrite(_hashtable, key, value, value_length, overwrite)) == 0){
 		answer.key = value_length;
 	}else{
-		answer.flag = ERROR;
 		answer.key = 0;	
-		ret = ERROR;
 	}
+	answer.flag = ret; // ret will be OK upon sucess, OVR_ERROR in case of overwrite error or ERROR
 
 	nbytes = send(client_fd, &answer, sizeof(message), 0);
 	printf("\tInserted %d - %s in Hashtable.\n", key, value); // DEBUG
@@ -136,12 +122,21 @@ int sv_delete(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pth
 
 int logEntry(FILE* log_fp, pthread_mutex_t* log_lock, int flag, int key, char* value, int value_length){
 	
+	int ret = 0;
 	pthread_mutex_lock(log_lock);
-	if(fwrite((void*) &flag, sizeof(int), 1, log_fp) == 0){}		// flag
-	if(fwrite((void*) &key, sizeof(uint32_t), 1, log_fp) == 0){}		// key 
-	if(fwrite((void*) &value_length, sizeof(int), 1, log_fp) == 0){}	// value_length
+	if(fwrite((void*) &flag, sizeof(int), 1, log_fp) == 0){				// flag
+		ret = ERROR;
+	}
+	if(fwrite((void*) &key, sizeof(uint32_t), 1, log_fp) == 0){			// key 
+		ret = ERROR;
+	}
+	if(fwrite((void*) &value_length, sizeof(int), 1, log_fp) == 0){		// value_length
+		ret = ERROR;
+	}
 	if (flag == WRITE){
-		if(fwrite((void*) value, sizeof(char), value_length, log_fp) == 0){}	// value 
+		if(fwrite((void*) value, sizeof(char), value_length, log_fp) == 0){	// value 
+			ret = ERROR;
+		}
 	}
 	pthread_mutex_unlock(log_lock);
 	return 0;
