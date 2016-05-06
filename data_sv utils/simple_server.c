@@ -69,7 +69,7 @@ void* clientHandler(void* pthread_arg){
 int main(int argc, char **argv){
 	
 	// Read backup
-	hashtable = (Hashtable*) restoreFromFile("backup.bin", HASHTABLE_SIZE);
+	hashtable = (Hashtable*) restoreFromFile(BACKUP_FILE, HASHTABLE_SIZE);
 	printHashtable(hashtable);
 	
 	// Open log file and apply entries to the hashtable. Initialize log file mutex lock
@@ -95,10 +95,10 @@ int main(int argc, char **argv){
  	
  	// Communication protocol configuration
 	server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(DATA_PORT);
+	server_addr.sin_addr.s_addr = INADDR_ANY;
+	server_addr.sin_port = htons(DATA_PORT);
 
-    // Server bind
+	// Server bind
  	int err = bind(sock_fd, (struct sockaddr *)&server_addr, sizeof(server_addr));
  	if(err == -1) {
 		perror("Data Sv - Bind: ");
