@@ -19,7 +19,7 @@ int backup(){
 	lockHashtable(hashtable);	
 	writeBackupHashtable(hashtable, BACKUP_FILE);	
 	pthread_mutex_lock(&log_lock);
-	log_fp = eraseLog(log_fp, LOG_FILE);
+	//log_fp = eraseLog(log_fp, LOG_FILE);
 	pthread_mutex_unlock(&log_lock);
 	unlockHashtable(hashtable);
 }

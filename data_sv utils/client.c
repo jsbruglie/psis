@@ -21,20 +21,11 @@ int main(){
 	ret = kv_write(kv_descriptor, 3, "abc", (strlen("abc") + 1) * sizeof(char), 0);
 	printf("kv_write returned %d \n", ret);
 
-	//ret = kv_write(kv_descriptor, key, val, (strlen(val) + 1) * sizeof(char), 0);
-	//printf("kv_write returned %d \n", ret);
-
-	//ret = kv_read(kv_descriptor, key, read_val, MAX_BUFFER * sizeof(char));
-	//printf("kv_read returned %d : %s  \n", ret, read_val);
-
-	//ret = kv_delete(kv_descriptor, key);
-	//printf("kv_delete returned %d \n", ret);
+	ret = kv_delete(kv_descriptor, 2);
+	printf("kv_delete returned %d \n", ret);
 	
-	//ret = kv_delete(kv_descriptor, key);
-	//printf("kv_delete returned %d \n", ret);
-
- 	//printf("Reading from server\n");
- 	//kv_read(kv_descriptor, key, read_val, strlen(read_val));
+ 	printf("Reading from server\n");
+ 	kv_read(kv_descriptor, 3, read_val, MAX_BUFFER);
  	
  	printf("Closing connection to server\n");
  	kv_close(kv_descriptor);

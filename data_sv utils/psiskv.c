@@ -29,7 +29,7 @@ int kv_connect(char* kv_server_ip, int kv_server_port){
 	
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = inet_addr(kv_server_ip); 		// Set destination IP number - localhost, 127.0.0.1 // 
-	server_addr.sin_port = htons(kv_server_port);               // Set destination port number //
+	server_addr.sin_port = htons(kv_server_port);               	// Set destination port number //
 	
 	// Connect to the server
 	err = connect(sock_fd, (const struct sockaddr *) &server_addr, sizeof(server_addr));
@@ -128,14 +128,10 @@ int kv_read(int kv_descriptor, uint32_t key, char* value, int value_length){
 	}
 	else{
 		nbytes = recv(kv_descriptor, buffer, value_length, 0);
-		printf("\tFound %s\n",buffer);
-
 		memcpy(value, buffer, value_length); 
-
-
+		printf("\tFound %s.\n", value);
 		ret = 0;
 	}	
-
 	return ret;
 }
 

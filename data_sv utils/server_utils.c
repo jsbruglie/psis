@@ -40,7 +40,7 @@ int sv_read(int client_fd, message m, Hashtable* _hashtable){
 	message answer;
 	memset(&answer, 0, sizeof(message));
 	kv_pair* kv;	
-	char buffer[MAX_BUFFER];
+	char* buffer;
 
 	uint32_t key = m.key;
 	int value_length = m.value_length;
@@ -52,9 +52,13 @@ int sv_read(int client_fd, message m, Hashtable* _hashtable){
 		answer.flag = OK;
 		answer.value_length = kv->value_length;
 		send(client_fd, &answer, sizeof(message), 0);
-		memcpy(buffer, kv->value, answer.value_length); 
+		if (value_length > kv->value_length); // If the user has requested to read more than the value holds
+			value_length = kv->value_length;
+		buffer = malloc(sizeof(char) * value_length);
+		memcpy(buffer, kv->value, value_length); 
 		send(client_fd, buffer, answer.value_length, 0);
 		kv_freeKvPair(kv);
+		free(buffer);
 	}
 
 	return ret;
@@ -134,7 +138,7 @@ int sv_delete(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pth
 int logEntry(FILE* log_fp, pthread_mutex_t* log_lock, int flag, int key, char* value, int value_length){
 	
 	pthread_mutex_lock(log_lock);
-	if(fwrite((void*) &flag, sizeof(int), 1, log_fp) == 0){}			// flag
+	if(fwrite((void*) &flag, sizeof(int), 1, log_fp) == 0){}		// flag
 	if(fwrite((void*) &key, sizeof(uint32_t), 1, log_fp) == 0){}		// key 
 	if(fwrite((void*) &value_length, sizeof(int), 1, log_fp) == 0){}	// value_length
 	
@@ -158,19 +162,20 @@ FILE* processLogEntries(char* filename, Hashtable* _hashtable){
 	if (fp != NULL){
 			
 		while(!feof(fp)){		
-			if(fread(&(flag), sizeof(int), 1, fp) == 0){ 					// flag	
+			if(fread(&(flag), sizeof(int), 1, fp) == 0){ 			// flag	
 				ret = ERROR;
 				break; 
 			}
-			if(fread(&(key), sizeof(int), 1, fp) == 0){						// key
+			if(fread(&(key), sizeof(int), 1, fp) == 0){			// key
 				ret = ERROR;
 				break;
 			}
-			if(flag == WRITE){
-				if(fread(&(value_length), sizeof(int), 1, fp) == 0){		// value_length
-					ret = ERROR;
-					break;
-				}		
+			if(fread(&(value_length), sizeof(int), 1, fp) == 0){		// value_length
+				ret = ERROR;
+				break;
+			}		
+			
+			if (flag == WRITE){
 				value = (char*) malloc(sizeof(char) * value_length);
 				if(fread(value, sizeof(char), value_length, fp) == 0){		// value
 					ret = ERROR;
@@ -178,7 +183,6 @@ FILE* processLogEntries(char* filename, Hashtable* _hashtable){
 				}
 				hashtableWrite(_hashtable, key, value, value_length, 0);
 				free(value);
-			
 			}else if(flag == DELETE){
 				hashtableDelete(_hashtable, key);
 			}
