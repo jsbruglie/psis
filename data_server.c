@@ -1,6 +1,14 @@
 #include "server_utils.h"
 #include "server_common.h"
 
+// Verbose
+#define VERBOSE 1
+#ifdef VERBOSE
+#define debugPrint(str){printf(str);}
+#else
+#define debugPrint(str)
+#endif
+
 #define MIN_THREADS 2
 #define MAX_THREADS 5
 
@@ -12,8 +20,10 @@ pthread_mutex_t log_lock;
 FILE* log_fp;
 
 // Socket global variables
-int data_sock_fd;
-int front_sock_fd;
+int data_sock_fd = -1;
+int front_sock_fd = -1;
+
+int DS_port = -1;
 
 // Threadpool global variables
 pthread_mutex_t pool_lock;
@@ -91,7 +101,7 @@ void* clientHandler(void* pthread_arg){
 	//	purpose is to create the necessary number of client handling threads.
 	pthread_mutex_lock(&pool_lock);
 	ready_count--;
-	printf("[DS - cH]\tReady thread count %d\n", ready_count);
+	//printf("[DS - cH]\tReady thread count %d\n", ready_count);
 	if (!creating_threads){
 		if (ready_count <= MIN_THREADS){
 			creating_threads = 1;
@@ -102,11 +112,16 @@ void* clientHandler(void* pthread_arg){
 	pthread_mutex_unlock(&pool_lock);
 	
 	while ((nbytes = recv(client_fd, &m, sizeof(message), 0)) != 0){
-		printf("[DS - cH]\tRequest from client %d\tFLAG %d KEY %d SIZE %d\n", client_fd, m.flag, m.key, m.value_length); 
-		if((ret = processRequest(client_fd, m, hashtable, log_fp, &log_lock)) != 0){
-			printf("[DS -cH]\tData Sv - Request from client %d\twas not fulfilled. Return value %d.\n", client_fd, ret); //DEBUG
+		if (m.flag == FS_SERVER_TAG){
+			front_sock_fd = client_fd;
 		}
-		printHashtable(hashtable);
+		else{
+			printf("[DS - cH]\tRequest from client %d\tFLAG %d KEY %d SIZE %d\n", client_fd, m.flag, m.key, m.value_length); 
+			if((ret = processRequest(client_fd, m, hashtable, log_fp, &log_lock)) != 0){
+				//printf("[DS -cH]\tData Sv - Request from client %d\twas not fulfilled. Return value %d.\n", client_fd, ret); //DEBUG
+			}
+		}
+		//printHashtable(hashtable);
 	}
 	pthread_exit(NULL);
 }
@@ -117,7 +132,7 @@ int setupFrontServer(){
 	int err = -1;	
 
  	front_sock_fd = socket(AF_INET, SOCK_STREAM, 0);
- 	if (front_sock_fd== -1){
+ 	if (front_sock_fd == -1){
 		perror("[DS - fSH]\tSocket");
 		exit(-1);
 	}
@@ -129,8 +144,10 @@ int setupFrontServer(){
 
 	// Connect to the server
 	for(i = 0; err == -1 && i < NUMBER_OF_TRIES; i++){
-		server_addr.sin_port = htons(FS_PORT + i);
-		err = connect(front_sock_fd, (const struct sockaddr *) &server_addr, sizeof(server_addr));
+		if (FS_PORT+i != DS_port){ 
+			server_addr.sin_port = htons(FS_PORT + i);
+			err = connect(front_sock_fd, (const struct sockaddr *) &server_addr, sizeof(server_addr));
+		}
 	}
 	
 	if (err == -1){
@@ -157,14 +174,25 @@ int setupFrontServer(){
 // Checks if the front server is alive
 void frontServerHandler(){
 
-	int hbeat = 1;
+	int hbeat = 0;
 
 	while(1){
-		hbeat = heartbeat(front_sock_fd, FIRST);
-		if(hbeat != 0){
-			printf("[DS - fSH]\tThe front server has gone down. Exiting.\n");
+		hbeat = heartbeat(front_sock_fd, 0, FIRST);
+		if(hbeat == DIE){
+			printf("[DS - fSH]\tThe front server has ordered a shutdown. Exiting.\n");
 			quitDataServer();
 		}
+		else if(hbeat == DEAD ){
+			printf("[DS - fSH]\tThe front server has gone down. Attempting to restart it.\n");
+			front_sock_fd = -1;
+			if (!fork()){
+				char port[10];
+				sprintf(port, "%d", DS_port);
+				char* argv[] = { EXECUTE_FS, port, 0 };
+				execve(argv[0], argv, NULL);
+			}
+		}
+		sleep(HEARTBEAT_TIME);
 	}
 }
 
@@ -177,15 +205,17 @@ int main(int argc, char **argv){
 	log_fp = (FILE*) processLogEntries(LOG_FILE, hashtable);
 	pthread_mutex_init(&log_lock, NULL);
 
-	printHashtable(hashtable);
-
+	int i;
 	// Creates a socket for the server
-	if ((data_sock_fd = createSocket(DS_PORT)) == -1)
-		quitDataServer();
+	for(i = 0; data_sock_fd == -1 && i < NUMBER_OF_TRIES; i++)
+		data_sock_fd = createSocket(DS_PORT + i);
+	if (data_sock_fd== -1){
+		exit(-1);
+	}
+	DS_port = DS_PORT + i - 1;
  	printf("[DS - main]\tSocket created and binded. Data server ready to receive messages.\n"); // DEBUG
 
- 	// Configure CTR-C signal
-	signal(SIGINT, quitDataServer);
+ 	printHashtable(hashtable);
 
  	// Configures the connection with the front server
 	setupFrontServer();

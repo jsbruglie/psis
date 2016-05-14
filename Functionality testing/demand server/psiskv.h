@@ -2,36 +2,38 @@
 	psis_kv.h
 	Header for the library that allows the connection between server and clients
 */
+
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
-#include <signal.h>
 #include <stdint.h>
+
 #include <unistd.h>
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#include <arpa/inet.h>
+// Defines
+#define SOCK_ADDRESS "/tmp/psis_kv_sock"
+#define PORT 9999
 
+#define DATA_PORT 9998
 #define MAX_BUFFER 1024
 
-// Client to data server flags 
+
+// Client to server flags 
 #define READ 0
 #define WRITE 1 		// Attempt to write, withouth overwrite permission
 #define OVERWRITE 2		// Attempt to write, with overwrite permission
 #define DELETE 3
 
-// Data server to client flags
-#define OK	0			// Sucessfully written
+// Server to client flags
+#define RECEIVED 4
+#define OK	0		// Sucessfully written
 #define ERROR -1 		// Unspecified error
 #define OVR_ERROR -2 	// Attempt to overwrite without permission
-
-// Client to front server tags
-#define CLIENT_TAG 0
-
-#define NUMBER_OF_TRIES 10
 
 /* 	Data structures */
 typedef struct _message{

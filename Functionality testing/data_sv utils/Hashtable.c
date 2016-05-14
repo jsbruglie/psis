@@ -28,13 +28,13 @@ Hashtable* createHashtable(int size){
 
 	new = (Hashtable*) malloc(sizeof(Hashtable));
 	if (new == NULL){
-		perror("createHashtable - hashtable");
+		perror("createHashtable - hashtable: ");
 		return NULL;
 	}
 
 	new->table = (LinkedList**) malloc(sizeof(LinkedList*) * size); 
 	if (new->table == NULL){
-		perror("createHashtable - hashtable->table");
+		perror("createHashtable - hashtable->table: ");
 		return NULL;
 	}
 
@@ -53,11 +53,9 @@ Hashtable* createHashtable(int size){
 	return new;
 }
 
-// Knut's multiplicative method hash
-//	as seen in 
-// 2654435761 is the golden ratio of 4294967296 (2^32)
+// Temporary not so great hash
 int hash(int size, uint32_t key){
-	uint32_t hashval = key * 2654435761 % 4294967296;
+	uint32_t hashval = key * (key + 3) * 0.5;
 	return hashval % size;
 }
 
@@ -78,7 +76,7 @@ kv_pair* hashtableRead(Hashtable* _hashtable, uint32_t key){
 		kv_aux = (kv_pair*) getItemLinkedList(list);
 		if(kv_aux->key == key){
 			kv = kv_allocKvPair(key, kv_aux->value, kv_aux->value_length);
-			//printf("Found kv_pair - key %d value %s of size %d.\n", kv->key, kv->value, kv->value_length);
+			printf("Found kv_pair - key %d value %s of size %d.\n", kv->key, kv->value, kv->value_length);
 			pthread_mutex_unlock(&(_hashtable->lock[hashval]));
 			return kv;
 		}

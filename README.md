@@ -1,2 +1,4 @@
 # psis
-psis course project - bob ross <3
+##psis course project
+
+Almost finished. Testing and debugging phase.

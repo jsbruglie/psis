@@ -23,33 +23,30 @@ int createSocket(int port){
  	return sock_fd;
 }
 
-int heartbeat(int fd, int heartbeatPairID){
+int heartbeat(int fd, int msg, int heartbeatPairID){
 	
 	int nbytes;
-	int flag;
-
-	sleep(HEARTBEAT_TIME);
+	int answer;
 
 	if(heartbeatPairID == FIRST){
-		flag = 1;
-		nbytes = send(fd, &flag, sizeof(flag), 0);
-		nbytes = recv(fd, &flag, sizeof(flag), 0);
-		//printf("[heartbeat] 1\n");
+		//printf("[heartbeat]\t1\n");
+		nbytes = send(fd, &msg, sizeof(msg), 0);
+		nbytes = recv(fd, &answer, sizeof(answer), 0);
 		if(nbytes == 0){
 			printf("[heartbeat]\tNo response.\n");
-			return -1;
+			answer =  DEAD;
 		}
 	}
 	else if(heartbeatPairID == SECOND){
-		nbytes = recv(fd, &flag, sizeof(flag), 0);
+		//printf("[heartbeat]\t2\n");
+		nbytes = recv(fd, &answer, sizeof(answer), 0);
 		if(nbytes == 0){
 			printf("[heartbeat]\tNo response.\n");
-			return -1;
+			answer = DEAD;
 		}
-		flag = 1;
-		//printf("[heartbeat] 2\n");
-		nbytes = send(fd, &flag, sizeof(flag), 0);
+		else{
+			nbytes = send(fd, &msg, sizeof(msg), 0);
+		}
 	}
-
-	return 0;
+	return answer;
 }

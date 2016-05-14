@@ -12,7 +12,8 @@
 #include "Hashtable.h"
 #include "psiskv.h"
 
-#define HASHTABLE_SIZE 3 // First prime after 1000 
+#define MAX_CLIENTS 10
+#define HASHTABLE_SIZE 3 
 
 #define BACKUP_FILE "backup.bin"
 #define LOG_FILE "log.bin"

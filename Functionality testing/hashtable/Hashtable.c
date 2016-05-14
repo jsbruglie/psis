@@ -18,7 +18,7 @@ kv_pair* kv_allocKvPair(uint32_t key, char* value, int value_length){
 	return new_kv;
 }
 
-Hashtable* createHashtable(int size){
+Hashtable* createHashtable(unsigned long int size){
 	
 	if(size < 1) 
 		return NULL;
@@ -28,13 +28,13 @@ Hashtable* createHashtable(int size){
 
 	new = (Hashtable*) malloc(sizeof(Hashtable));
 	if (new == NULL){
-		perror("createHashtable - hashtable");
+		perror("createHashtable - hashtable: ");
 		return NULL;
 	}
 
 	new->table = (LinkedList**) malloc(sizeof(LinkedList*) * size); 
 	if (new->table == NULL){
-		perror("createHashtable - hashtable->table");
+		perror("createHashtable - hashtable->table: ");
 		return NULL;
 	}
 
@@ -53,32 +53,29 @@ Hashtable* createHashtable(int size){
 	return new;
 }
 
-// Knut's multiplicative method hash
-//	as seen in 
-// 2654435761 is the golden ratio of 4294967296 (2^32)
-int hash(int size, uint32_t key){
-	uint32_t hashval = key * 2654435761 % 4294967296;
-	return hashval % size;
+// Temporary not so great hash
+int hash(unsigned long int size, uint32_t key){
+	uint32_t hashval = key * (key + 3) * 0.5;
+	return hashval%(size);
 }
 
 kv_pair* hashtableRead(Hashtable* _hashtable, uint32_t key){
 	
 	LinkedList* list;
-	kv_pair* kv_aux;
-	kv_pair* kv;
+	kv_pair* kv_aux, *kv;
 
 	if (_hashtable == NULL){
 		return NULL;
 	}
 
 	int hashval = hash(_hashtable->size, key);
+	printf("%d\n", hashval);
 
 	pthread_mutex_lock(&(_hashtable->lock[hashval]));
 	for(list = _hashtable->table[hashval]; list != NULL; list = getNextNodeLinkedList(list)){
 		kv_aux = (kv_pair*) getItemLinkedList(list);
 		if(kv_aux->key == key){
 			kv = kv_allocKvPair(key, kv_aux->value, kv_aux->value_length);
-			//printf("Found kv_pair - key %d value %s of size %d.\n", kv->key, kv->value, kv->value_length);
 			pthread_mutex_unlock(&(_hashtable->lock[hashval]));
 			return kv;
 		}
@@ -172,94 +169,6 @@ void freeHashtable(Hashtable* _hashtable){
 	free(_hashtable);
 }
 
-int writeBackupHashtable(Hashtable* _hashtable, char* filename){
-	
-	FILE* fp;
-	LinkedList* list;
-	kv_pair* temp_kv;
-	int ret = 0;
-	int i;
-
-	fp = fopen(filename, "w");  	
-	for (i = 0; i < _hashtable->size; i++){
-		for(list = _hashtable->table[i]; list != NULL; list = getNextNodeLinkedList(list)){
-			temp_kv = (kv_pair*) getItemLinkedList(list);
-			if(fwrite((void*) &(temp_kv->key), sizeof(uint32_t), 1, fp) == 0){						// key
-				ret = ERROR;
-				break;
-			}
-			if(fwrite((void*) &(temp_kv->value_length), sizeof(int), 1, fp) == 0){ 				// value_length
-				ret = ERROR;
-				break;
-			} 
-			if(fwrite((void*) temp_kv->value, sizeof(char), temp_kv->value_length, fp) == 0){		// value
-				ret = ERROR;
-				break;
-			}
-		}
-	}
-	fclose(fp); 
-	return ret;
-}
-
-Hashtable* restoreFromFile(char* filename, int size){
-
-	FILE* fp;
-	Hashtable* _hashtable;
-	LinkedList* list;
-	kv_pair* temp_kv;
-	int ret = 0;
-
-	uint32_t key;
-	int value_length;
-	char* value;
-
-	fp = fopen(filename, "r");
-	_hashtable = createHashtable(size);	
-	if (fp == NULL){
-		return _hashtable;  
-	}
-	
-	while(!feof(fp)){		
-		if(fread(&(key), sizeof(uint32_t), 1, fp) == 0){ 			// key
-			ret = ERROR;
-			break; 
-		}
-		if(fread(&(value_length), sizeof(int), 1, fp) == 0){		// value_length
-			ret = ERROR;
-			break;
-		}		
-		value = (char*) malloc(sizeof(char) * value_length);
-		if(fread(value, sizeof(char), value_length, fp) == 0){		// value
-			ret = ERROR;
-			break;
-		}
-		hashtableWrite(_hashtable, key, value, value_length, 0);
-		free(value);
-	}
-	fclose(fp);
-	return _hashtable;
-}
-
-int lockHashtable(Hashtable* _hashtable){
-	int i;
-	if (_hashtable == NULL)
-		return ERROR;
-	for (i = 0; i < _hashtable->size; i++){
-		 pthread_mutex_lock(&(_hashtable->lock[i]));	
-	}
-	return 0;
-}		
-
-int unlockHashtable(Hashtable* _hashtable){
-	int i;
-	if (_hashtable == NULL)
-		return ERROR;
-	for (i = 0; i < _hashtable->size; i++){
-		 pthread_mutex_unlock(&(_hashtable->lock[i]));	
-	}
-}
-	
 // DEBUG
 void printHashtable(Hashtable* _hashtable){
 
@@ -273,7 +182,7 @@ void printHashtable(Hashtable* _hashtable){
 		pthread_mutex_lock(&(_hashtable->lock[i]));
 		for(list = _hashtable->table[i]; list != NULL; list = getNextNodeLinkedList(list)){
 			temp_kv = (kv_pair*) getItemLinkedList(list);
-			printf("%d->%s ", temp_kv->key, (char*) temp_kv->value);
+			printf("%d->%s ", temp_kv->key, temp_kv->value);
 		}
 		pthread_mutex_unlock(&(_hashtable->lock[i]));
 		printf("\n");
