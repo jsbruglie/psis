@@ -35,9 +35,9 @@
 
 /* 	Data structures */
 typedef struct _message{
+	int flag;
 	uint32_t key;
     int value_length;
-    int flag;
 } message;
 
 /*
