@@ -4,6 +4,7 @@ The project consists in a key-value store that can be acessed by clients using t
 
 ## Execution
 In order to run, the following commands should be issued in a bash terminal, in order.
+
 1. ``` make```
 2. ``` ./front_server```
 3. ``` ./data_server```
