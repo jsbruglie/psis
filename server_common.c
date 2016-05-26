@@ -29,7 +29,7 @@ int heartbeat(int fd, int msg, int heartbeatPairID){
 	int answer;
 
 	if(heartbeatPairID == FIRST){
-		//printf("[heartbeat]\t1\n");
+		printf("[heartbeat]\t1\n");
 		nbytes = send(fd, &msg, sizeof(msg), 0);
 		nbytes = recv(fd, &answer, sizeof(answer), 0);
 		if(nbytes == 0){
@@ -38,7 +38,7 @@ int heartbeat(int fd, int msg, int heartbeatPairID){
 		}
 	}
 	else if(heartbeatPairID == SECOND){
-		//printf("[heartbeat]\t2\n");
+		printf("[heartbeat]\t2\n");
 		nbytes = recv(fd, &answer, sizeof(answer), 0);
 		if(nbytes == 0){
 			printf("[heartbeat]\tNo response.\n");

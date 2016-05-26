@@ -81,6 +81,9 @@ int kv_write(int kv_descriptor, uint32_t key, char* value, int value_length, int
 	m.key = key;
 	m.value_length = value_length;	
 	
+	if (kv_descriptor == -1)
+		return -1;
+
 	if (kv_overwrite == 0){  
 		m.flag = WRITE;
 	}else{
@@ -124,6 +127,9 @@ int kv_read(int kv_descriptor, uint32_t key, char* value, int value_length){
 	m.flag = READ;
 	char* buffer; 
 
+	if (kv_descriptor == -1)
+		return -1;
+
 	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
 	printf("\tkv_read - Request to server %d: FLAG %d KEY %d SIZE %d\n", kv_descriptor, m.flag, m.key, m.value_length); // DEBUG
 
@@ -157,6 +163,9 @@ int kv_delete(int kv_descriptor, uint32_t key){
 	m.key = key;	
 	m.flag = DELETE;
 	m.value_length = -1;
+
+	if (kv_descriptor == -1)
+		return -1;
 
 	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
 	printf("Request to server %d: FLAG %d KEY %d SIZE %d\n", kv_descriptor, m.flag, m.key, m.value_length); // DEBUG

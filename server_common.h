@@ -10,17 +10,23 @@
 #include <signal.h>
 #include <unistd.h>
 
+#include <fcntl.h>
+#include <sys/stat.h>
+
 // Heartbeat related macros
 #define FIRST 0
 #define SECOND 1
 #define ALIVE 0
 #define DEAD -1
 #define DIE -2
-#define HEARTBEAT_TIME 2
+#define HEARTBEAT_TIME 2 // in seconds
 
 // Default server ports
-#define FS_PORT 9999
-#define DS_PORT 10000
+#define DEFAULT_FS_PORT 9999
+#define DEFAULT_DS_PORT 10000
+
+// Localhost IP
+#define LOCALHOST "127.0.0.1"
 
 // Private front and data server id - distinguishes them from clients
 #define FS_SERVER_TAG 7328827 // random integer
@@ -31,7 +37,7 @@
 #define EXECUTE_DS "./data_server"
 
 // Creates a TCP socket and returns the respective file descriptor
-int createSocket(int port); // TODO - ADD IP as parameters
+int createSocket(int port);
 
 // Implements a simple heartbeat protocol to determine if any of the servers have died or order shutdown
 int heartbeat(int fd, int msg, int heartbeatPairID);

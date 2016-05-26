@@ -6,24 +6,24 @@ int processRequest(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp
 	if(m.flag == READ) { // READ
 		if((ret = sv_read(client_fd, m, _hashtable)) != 0){
 			if (ret == 1){
-				printf("[DS - pR]\tprocessRequest - sv_read - Key not found\n"); // DEBUG	
+				//printf("[DS - pR]\tprocessRequest - sv_read - Key not found\n"); // DEBUG	
 			}else{
-				printf("[DS - pR]\tprocessRequest - sv_read\n"); // DEBUG
+				//printf("[DS - pR]\tprocessRequest - sv_read\n"); // DEBUG
 			}
 	}
 
 	}else if(m.flag == WRITE || m.flag == OVERWRITE){ // WRITE
 		if( (ret = sv_write(client_fd, m, _hashtable, log_fp, log_lock)) != 0){
 			if(ret == OVR_ERROR ){
-				printf("[DS - pR]\tprocessRequest - sv_write - Overwrite not allowed.\n"); // DEBUG
+				//printf("[DS - pR]\tprocessRequest - sv_write - Overwrite not allowed.\n"); // DEBUG
 			}
 			else{
-				printf("[DS - pR]\tprocessRequest - sv_write\n"); // DEBUG
+				//printf("[DS - pR]\tprocessRequest - sv_write\n"); // DEBUG
 			}
 		}
 	}else if(m.flag == DELETE){ // DELETE 
 		if (sv_delete(client_fd, m, _hashtable, log_fp, log_lock) != 0){
-			printf("[DS - pR]\tprocessRequest - sv_delete\n"); // DEBUG
+			//printf("[DS - pR]\tprocessRequest - sv_delete\n"); // DEBUG
 			ret = -1;
 		}
 	}

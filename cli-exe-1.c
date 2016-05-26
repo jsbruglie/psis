@@ -3,9 +3,10 @@
 #include <string.h>
 
 #define MAX_VALUES 10
-int main(){
+int main(int argc, char* argv[]){
 	char linha[1000];
-	int kv = kv_connect("127.0.0.1", 9999);
+	int port = atoi(argv[1]);
+	int kv = kv_connect("127.0.0.1", port);
 
 	for (uint32_t i = 0; i < MAX_VALUES; i ++){
 		sprintf(linha, "%u", i);
