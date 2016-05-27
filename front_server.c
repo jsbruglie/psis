@@ -6,15 +6,8 @@
 #include "server_common.h"
 
 // Verbose
-//#define VERBOSE 1 // Uncomment this line for verbose terminal output
-
-#ifdef VERBOSE
-#define debugPrint(str){printf(str);}
-#define debugPrint1(str,arg){printf(str,arg);}
-#else
-#define debugPrint(str)
-#define debugPrint1(str,arg)
-#endif
+#define VERBOSE 1 // Uncomment this line for verbose terminal output
+#include "debug.h"
 
 // Global variables
 int DS_port = -1;			// The port that DS is listening to

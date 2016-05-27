@@ -2,14 +2,8 @@
 #include "server_common.h"
 
 // Verbose
-//#define VERBOSE 1 // Uncomment this line for verbose terminal output
-#ifdef VERBOSE
-#define debugPrint(str){printf(str);}
-#define debugPrint1(str,arg){printf(str,arg);}
-#else
-#define debugPrint(str)
-#define debugPrint1(str,arg)
-#endif
+#define VERBOSE 1 // Uncomment this line for verbose terminal output
+#include "debug.h"
 
 #define MIN_THREADS 2
 #define MAX_THREADS 5

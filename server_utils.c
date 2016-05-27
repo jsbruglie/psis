@@ -2,14 +2,7 @@
 
 // Verbose
 //#define VERBOSE 1 // Uncomment this line for verbose terminal output
-
-#ifdef VERBOSE
-#define debugPrint(str){printf(str);}
-#define debugPrint1(str,arg){printf(str,arg);}
-#else
-#define debugPrint(str)
-#define debugPrint1(str,arg)
-#endif
+#include "debug.h"
 
 int processRequest(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pthread_mutex_t* log_lock){
 
