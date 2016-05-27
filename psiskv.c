@@ -1,15 +1,28 @@
 #include "psiskv.h"
 
+// Verbose
+#define VERBOSE 1 // Uncomment this line for verbose terminal output
+
+#ifdef VERBOSE
+#define debugPrint(str){printf(str);}
+#define debugPrint1(str,arg){printf(str,arg);}
+#define debugPrint4(str,arg1,arg2,arg3,arg4){printf(str,arg1,arg2,arg3,arg4);}
+#else
+#define debugPrint(str)
+#define debugPrint1(str,arg)
+#define debugPrint4(str,arg1,arg2,arg3,arg4)
+#endif
+
 int kv_connect(char* kv_server_ip, int kv_server_port){
 
 	struct sockaddr_in server_addr;	
 	int err =-1;
 	int i;
 	
-    // Open a socket
+    	// Open a socket
  	int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
  	if (sock_fd == -1){
-		perror("kv_connect - Socket");
+		perror("[kv_connect]\tSocket");
 		return(ERROR);
 	}
 	
@@ -22,7 +35,7 @@ int kv_connect(char* kv_server_ip, int kv_server_port){
 		err = connect(sock_fd, (const struct sockaddr *) &server_addr, sizeof(server_addr));
 	}
 	if (err == -1){
-		perror("kv_connect - Couldn't connect to the server");
+		perror("[kv_connect]\tCouldn't connect to the server");
 		return ERROR;
 	}
 	
@@ -37,14 +50,14 @@ int kv_connect(char* kv_server_ip, int kv_server_port){
 	close(sock_fd);
 	
 	if (DSport == -1){
-		printf("\tkv_connect - Front server is unavailable.\n");
+		debugPrint("[kv_connect]\tFront server is unavailable.\n");
 		return ERROR;
 	}
-	printf("\tkv_connect - Received the port of the Data Server %d\n", DSport);
+	//printf("\tkv_connect - Received the port of the Data Server %d\n", DSport);
 
 	sock_fd = socket(AF_INET, SOCK_STREAM, 0);
  	if (sock_fd == -1){
-		perror("kv_connect - Socket");
+		perror("[kv_connect]\tSocket");
 		return ERROR;
 	}
 
@@ -54,7 +67,7 @@ int kv_connect(char* kv_server_ip, int kv_server_port){
 	
 	err = connect(sock_fd, (const struct sockaddr *) &server_addr, sizeof(server_addr));
 	if (err == -1){
-		perror("kv_connect - Connect");
+		perror("[kv_connect]\tConnect");
 		return ERROR;
 	}
 	return sock_fd;
@@ -93,16 +106,16 @@ int kv_write(int kv_descriptor, uint32_t key, char* value, int value_length, int
 	// Send a message with the key and the size of the data inserted
 	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
 	if (nbytes == -1){
-		perror("kv_write - Error sending key and size: ");
+		perror("[kv_write]\tError sending key and size");
 		return ERROR;
 	}
-	printf("\tkv_write - Request to server %d: FLAG %d KEY %d SIZE %d\n", kv_descriptor, m.flag, m.key, m.value_length); // DEBUG
+	//printf("\tkv_write - Request to server %d: FLAG %d KEY %d SIZE %d\n", kv_descriptor, m.flag, m.key, m.value_length); // DEBUG
 				
 	// Send the actual data
 	nbytes = send(kv_descriptor, value, value_length, 0);
 	nbytes = recv(kv_descriptor, &m, sizeof(message), 0);
 	if (nbytes == -1){
-		perror("kv_write - Server unresponsive: "); //DEBUG
+		perror("[kv_write]\tServer unresponsive"); //DEBUG
 		ret = ERROR;
 	}	
 	else{
@@ -131,21 +144,21 @@ int kv_read(int kv_descriptor, uint32_t key, char* value, int value_length){
 		return -1;
 
 	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
-	printf("\tkv_read - Request to server %d: FLAG %d KEY %d SIZE %d\n", kv_descriptor, m.flag, m.key, m.value_length); // DEBUG
+	debugPrint4("[kv_read]\tRequest to server %d: FLAG %d KEY %d SIZE %d\n", kv_descriptor, m.flag, m.key, m.value_length); // DEBUG
 
 	nbytes = recv(kv_descriptor, &m, sizeof(message), 0);
 	if (nbytes == -1){
-		perror("kv_read - Failed to get answer from server"); // DEBUG
+		perror("[kv_read]\tFailed to get answer from server"); // DEBUG
 		ret = ERROR;
 	}else if(m.flag == ERROR){
-		printf("kv_read - Value not found or invalid operation\n"); // DEBUG
+		debugPrint("[kv_read]\tValue not found or invalid operation\n"); // DEBUG
 		ret = ERROR;
 	}
 	else{
 		buffer = malloc(sizeof(char) * value_length);
 		nbytes = recv(kv_descriptor, buffer, value_length, 0);
 		memcpy(value, buffer, value_length); 
-		printf("\tkv_read - Found %s.\n", value);
+		debugPrint1("[kv_read]\tValue found %s.\n", value);
 		ret = 0;
 	}	
 	return ret;
@@ -168,14 +181,14 @@ int kv_delete(int kv_descriptor, uint32_t key){
 		return -1;
 
 	nbytes = send(kv_descriptor, &m, sizeof(message), 0);
-	printf("Request to server %d: FLAG %d KEY %d SIZE %d\n", kv_descriptor, m.flag, m.key, m.value_length); // DEBUG
+	debugPrint4("[kv_delete]\tRequest to server %d: FLAG %d KEY %d SIZE %d\n", kv_descriptor, m.flag, m.key, m.value_length); // DEBUG
 
 	nbytes = recv(kv_descriptor, &m, sizeof(message), 0);
 	if (nbytes == -1){
-		perror("kv_delete - Failed to get answer from server"); // DEBUG
+		perror("[kv_delete]\tFailed to get answer from server"); // DEBUG
 		ret = ERROR;
 	}else if(m.flag == ERROR){
-		printf("kv_delete - Error.\n"); // DEBUG
+		printf("[kv_delete]\tError.\n"); // DEBUG
 		ret = ERROR;
 	}			
 	return ret;

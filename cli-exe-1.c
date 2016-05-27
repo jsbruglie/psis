@@ -3,9 +3,22 @@
 #include <string.h>
 
 #define MAX_VALUES 10
+
 int main(int argc, char* argv[]){
+	
 	char linha[1000];
-	int port = atoi(argv[1]);
+	int port;
+		
+	if (argc > 1){
+		port = atoi(argv[1]);
+		if (port < 0){
+			printf("Invalid port provided!\n");
+			exit(-1);
+		}
+	}
+	else{
+		port = 9999;
+	}
 	int kv = kv_connect("127.0.0.1", port);
 
 	for (uint32_t i = 0; i < MAX_VALUES; i ++){
@@ -17,7 +30,7 @@ int main(int argc, char* argv[]){
 	getchar();
 	for (uint32_t i = 0; i < MAX_VALUES; i ++){
 		if(kv_read(kv, i , linha, 1000) == 0){
-			printf ("key - %10u value %s", i, linha);
+			printf ("R1 - key - %10u value %s\n", i, linha);
 		}
 	}
 
@@ -31,7 +44,7 @@ int main(int argc, char* argv[]){
 	getchar();
 	for (uint32_t i = 0; i < MAX_VALUES; i ++){
 		if(kv_read(kv, i , linha, 1000) == 0){
-			printf ("key - %10u value %s", i, linha);
+			printf ("R2 - key - %10u value %s\n", i, linha);
 		}
 	}
 
@@ -44,11 +57,8 @@ int main(int argc, char* argv[]){
 	getchar();
 	for (uint32_t i = 0; i < MAX_VALUES; i ++){
 		if(kv_read(kv, i , linha, 1000) == 0){
-			printf ("key - %10u value %s", i, linha);
+			printf ("R3 - key - %10u value %s\n", i, linha);
 		}
 	}
 	kv_close(kv);
-	
-	
-	
 }

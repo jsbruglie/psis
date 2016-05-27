@@ -1,29 +1,40 @@
 #include "server_utils.h"
 
+// Verbose
+//#define VERBOSE 1 // Uncomment this line for verbose terminal output
+
+#ifdef VERBOSE
+#define debugPrint(str){printf(str);}
+#define debugPrint1(str,arg){printf(str,arg);}
+#else
+#define debugPrint(str)
+#define debugPrint1(str,arg)
+#endif
+
 int processRequest(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pthread_mutex_t* log_lock){
 
 	int ret = 0;
 	if(m.flag == READ) { // READ
 		if((ret = sv_read(client_fd, m, _hashtable)) != 0){
 			if (ret == 1){
-				//printf("[DS - pR]\tprocessRequest - sv_read - Key not found\n"); // DEBUG	
+				debugPrint("[DS - pR]\tprocessRequest - sv_read - Key not found\n"); // DEBUG	
 			}else{
-				//printf("[DS - pR]\tprocessRequest - sv_read\n"); // DEBUG
+				debugPrint("[DS - pR]\tprocessRequest - sv_read\n"); // DEBUG
 			}
 	}
 
 	}else if(m.flag == WRITE || m.flag == OVERWRITE){ // WRITE
 		if( (ret = sv_write(client_fd, m, _hashtable, log_fp, log_lock)) != 0){
 			if(ret == OVR_ERROR ){
-				//printf("[DS - pR]\tprocessRequest - sv_write - Overwrite not allowed.\n"); // DEBUG
+				debugPrint("[DS - pR]\tprocessRequest - sv_write - Overwrite not allowed.\n"); // DEBUG
 			}
 			else{
-				//printf("[DS - pR]\tprocessRequest - sv_write\n"); // DEBUG
+				debugPrint("[DS - pR]\tprocessRequest - sv_write\n"); // DEBUG
 			}
 		}
 	}else if(m.flag == DELETE){ // DELETE 
 		if (sv_delete(client_fd, m, _hashtable, log_fp, log_lock) != 0){
-			//printf("[DS - pR]\tprocessRequest - sv_delete\n"); // DEBUG
+			debugPrint("[DS - pR]\tprocessRequest - sv_delete\n"); // DEBUG
 			ret = -1;
 		}
 	}
@@ -95,8 +106,9 @@ int sv_write(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pthr
 	answer.flag = ret; // ret will be OK upon sucess, OVR_ERROR in case of overwrite error or ERROR
 
 	nbytes = send(client_fd, &answer, sizeof(message), 0);
-	//printf("\tInserted %d - %s in Hashtable.\n", key, value); // DEBUG
-	
+	debugPrint1("\tInserted %d -", key);
+	debugPrint1(" %s in the data structure.\n", value);	
+
 	if (ret != ERROR){
 		logEntry(log_fp, log_lock, WRITE, key,value, value_length);
 	}	

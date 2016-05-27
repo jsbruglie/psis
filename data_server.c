@@ -2,11 +2,13 @@
 #include "server_common.h"
 
 // Verbose
-#define VERBOSE 1
+//#define VERBOSE 1 // Uncomment this line for verbose terminal output
 #ifdef VERBOSE
 #define debugPrint(str){printf(str);}
+#define debugPrint1(str,arg){printf(str,arg);}
 #else
 #define debugPrint(str)
+#define debugPrint1(str,arg)
 #endif
 
 #define MIN_THREADS 2
@@ -102,7 +104,7 @@ void setupFrontServer(int port, int range){
 		exit(-1);
 	}
 	
-	printf("[DS - sFS]\tExchanging messages with the front server at port %d.\n", (port + i - 1));
+	debugPrint1("[DS - sFS]\tExchanging messages with the front server at port %d.\n", (port + i - 1));
 	
 	int nbytes;	
 	message m;
@@ -110,7 +112,7 @@ void setupFrontServer(int port, int range){
 	
 	m.flag = DS_SERVER_TAG;
 	m.key = DS_port;
-	printf("[DS - fSH]\tSending the message with the data server tag and the port.\n");
+	debugPrint("[DS - fSH]\tSending the message with the data server tag and the port.\n");
 	nbytes = send(front_sock_fd, &m, sizeof(message), 0);
 
 	FS_connected = 1; 
@@ -125,11 +127,11 @@ void frontServerHandler(){
 		if(FS_connected){
 			response = heartbeat(front_sock_fd, 0, FIRST);
 			if(response == DIE){
-				printf("[DS - fSH]\tThe front server has ordered a shutdown. Exiting.\n");
+				debugPrint("[DS - fSH]\tThe front server has ordered a shutdown. Exiting.\n");
 				quitDataServer();
 			}
 			else if(response == DEAD){
-				printf("[DS - fSH]\tThe front server has gone down. Attempting to restart it.\n");
+				debugPrint("[DS - fSH]\tThe front server has gone down. Attempting to restart it.\n");
 				FS_connected = 0;
 				if (!fork()){
 					char current_DS_port[10];
@@ -164,7 +166,7 @@ void* clientHandler(void* pthread_arg){
 	while ((nbytes = recv(client_fd, &m, sizeof(message), 0)) != 0){
 		if (m.flag == FS_SERVER_TAG){
 			if (FS_connected == 0){
-				printf("[DS - cH]\tFront server reconnected. It's active and listenning to port %d.\n", m.key);
+				debugPrint1("[DS - cH]\tFront server reconnected. It's active and listenning to port %d.\n", m.key);
 				port_msg = m.key;
 				setupFrontServer(port_msg, 1);
 			}
@@ -212,7 +214,7 @@ void* createThreads(void* pthread_arg){
 	pthread_mutex_lock(&pool_lock);
 	ready_count+= thread_number;
 	creating_threads = 0;
-	printf("[DS - cT]\tCreated a few threads! Ready count: %d\n", ready_count);
+	debugPrint1("[DS - cT]\tCreated a few threads! Ready count: %d\n", ready_count);
 	pthread_mutex_unlock(&pool_lock);
 }
 

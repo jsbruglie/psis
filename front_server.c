@@ -6,12 +6,14 @@
 #include "server_common.h"
 
 // Verbose
-#define VERBOSE 1
+//#define VERBOSE 1 // Uncomment this line for verbose terminal output
 
 #ifdef VERBOSE
 #define debugPrint(str){printf(str);}
+#define debugPrint1(str,arg){printf(str,arg);}
 #else
 #define debugPrint(str)
+#define debugPrint1(str,arg)
 #endif
 
 // Global variables
@@ -71,7 +73,7 @@ int main(int argc, char **argv){
 
 void setupDataServer(){
 	
-	printf("[FS - sDS]\tPort provided: %d. Front server is expectedly recovering from crash.\n", DS_port);
+	debugPrint1("[FS - sDS]\tPort provided: %d. Front server is expectedly recovering from crash.\n", DS_port);
 	if (DS_port < 0){
 		debugPrint("[FS - sDS]\tIncorrect data server port provided. Exiting.\n");
 		exit(-1);
@@ -130,7 +132,7 @@ void connectionsHandler(){
 					data_sv_sock_fd = client_fd;
 					DS_port = m.key;
 					DS_connected = 1;
-					printf("[FS - cH]\tReceived DS port %d.\n", DS_port);
+					debugPrint1("[FS - cH]\tReceived DS port %d.\n", DS_port);
 					// Creates a thread that pings the front server
 					pthread_create(&ds_handler_id, NULL, (void*) dataServerHandler, (void*) NULL);
 					pthread_detach(ds_handler_id);
@@ -140,7 +142,7 @@ void connectionsHandler(){
 				
 				// Send client the data port
 				nbytes = send(client_fd, &DS_port, sizeof(DS_port), 0); 
-				printf("[FS - cH]\tNew client %d. Sending the data port.\n", client_fd);	
+				debugPrint1("[FS - cH]\tNew client %d. Sending the data port.\n", client_fd);	
 			}
 		}	
 	}
