@@ -2,11 +2,11 @@
 #include "server_common.h"
 
 // Verbose
-#define VERBOSE 1 // Uncomment this line for verbose terminal output
+//#define VERBOSE 1 // Uncomment this line for verbose terminal output
 #include "debug.h"
 
-#define MIN_THREADS 2
-#define MAX_THREADS 5
+#define MIN_THREADS 3
+#define MAX_THREADS 10
 
 // Global hashtable
 Hashtable* hashtable;
@@ -49,6 +49,8 @@ int main(int argc, char **argv){
 	// Open log file and apply entries to the hashtable. Initialize log file mutex lock
 	log_fp = (FILE*) processLogEntries(LOG_FILE, hashtable);
 	pthread_mutex_init(&log_lock, NULL);
+
+	//printHashtable(hashtable);
 
 	// Create a socket
 	int i;
@@ -169,6 +171,7 @@ void* clientHandler(void* pthread_arg){
 			processRequest(client_fd, m, hashtable, log_fp, &log_lock);
 		}
 	}
+	//printHashtable(hashtable);
 	pthread_exit(NULL);
 }
 

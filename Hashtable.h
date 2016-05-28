@@ -8,8 +8,6 @@
 #include "LinkedList.h"
 #define ERROR -1
 
-#define MAX_BUFFER 1024
-
 typedef struct _kv_pair{
 	uint32_t key;
 	char* value;

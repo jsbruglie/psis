@@ -78,7 +78,6 @@ kv_pair* hashtableRead(Hashtable* _hashtable, uint32_t key){
 		kv_aux = (kv_pair*) getItemLinkedList(list);
 		if(kv_aux->key == key){
 			kv = kv_allocKvPair(key, kv_aux->value, kv_aux->value_length);
-			//printf("Found kv_pair - key %d value %s of size %d.\n", kv->key, kv->value, kv->value_length);
 			pthread_mutex_unlock(&(_hashtable->lock[hashval]));
 			return kv;
 		}

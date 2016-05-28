@@ -6,7 +6,7 @@
 #include "server_common.h"
 
 // Verbose
-#define VERBOSE 1 // Uncomment this line for verbose terminal output
+// #define VERBOSE 1 // Uncomment this line for verbose terminal output
 #include "debug.h"
 
 // Global variables
@@ -60,7 +60,7 @@ int main(int argc, char **argv){
  	pthread_create(&console_id, NULL, (void*) consoleHandler, NULL);
  	pthread_detach(console_id);
 
- 	// Handle incoming connections, both from client or the data server
+ 	// Handle incoming connections, both from client and the data server
  	connectionsHandler();
 }
 

@@ -12,11 +12,12 @@
 #include "Hashtable.h"
 #include "psiskv.h"
 
-#define HASHTABLE_SIZE 3 // First prime after 1000 
+#define HASHTABLE_SIZE 59
 
 #define BACKUP_FILE "backup.bin"
 #define LOG_FILE "log.bin"
 
+// Data server functions
 int processRequest(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pthread_mutex_t* log_lock);
 int sv_read(int client_fd, message m, Hashtable* _hashtable);
 int sv_write(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pthread_mutex_t* log_lock);
@@ -26,5 +27,9 @@ int sv_delete(int client_fd, message m, Hashtable* _hashtable, FILE* log_fp, pth
 
 // Opens the log file and process each entry
 FILE* processLogEntries(char* filename, Hashtable* _hashtable);
+
+// Proccess a single log entry
 int logEntry(FILE* log_fp, pthread_mutex_t* log_lock, int flag, int key, char* value, int value_length);
+
+// Erases the log file, but keeps it open for writing
 FILE* eraseLog(FILE* log_fp, char* file_name);

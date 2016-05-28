@@ -179,11 +179,9 @@ int kv_delete(int kv_descriptor, uint32_t key){
 		perror("[kv_delete]\tFailed to get answer from server"); // DEBUG
 		ret = ERROR;
 	}else if(m.flag == ERROR){
-		printf("[kv_delete]\tError.\n"); // DEBUG
+		debugPrint("[kv_delete]\tError.\n"); // DEBUG
 		ret = ERROR;
 	}			
 	return ret;
 
 }
-
-

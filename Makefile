@@ -1,6 +1,6 @@
 DATA_SVR_OBJECT_FILES = server_common.o psiskv.o server_utils.o LinkedList.o Hashtable.o data_server.o
 FRNT_SVR_OBJECT_FILES = server_common.o psiskv.o front_server.o
-CLT_OBJECT_FILES = psiskv.o cli-exe-1.o
+CLT_OBJECT_FILES = psiskv.o client.o
 
 CFLAGS = -ggdb -Wall -pthread
 LIBS = -lpthread
@@ -17,7 +17,7 @@ client data_server front_server:
 client.o data_server.o front_server.o: 
 
 %.o: %.c
-	$(CC) -std=c99 -c $<  
+	$(CC) -c $<  
 
 cleanup:
 	rm -f *.o
