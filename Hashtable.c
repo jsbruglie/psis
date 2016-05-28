@@ -53,11 +53,9 @@ Hashtable* createHashtable(int size){
 	return new;
 }
 
-// Knut's multiplicative method hash
-//	as seen in 
-// 2654435761 is the golden ratio of 4294967296 (2^32)
+// As seen in https://gist.github.com/badboy/6267743
 int hash(int size, uint32_t key){
-	uint32_t hashval = key * 2654435761 % 4294967296;
+	uint32_t hashval = key * 2654435761;
 	return hashval % size;
 }
 
