@@ -2,7 +2,7 @@
 #include "server_common.h"
 
 // Verbose
-#define VERBOSE 1 // Uncomment this line for verbose terminal output
+//#define VERBOSE 1 // Uncomment this line for verbose terminal output
 #include "debug.h"
 
 #define MIN_THREADS 3
@@ -35,6 +35,7 @@ void quitDataServer();
 
 void* clientHandler(void* pthread_arg);
 
+// Thread related functions
 void checkThreads();
 void* createThreads(void* pthread_arg);
 
@@ -74,7 +75,7 @@ int main(int argc, char **argv){
 		setupFrontServer(FS_port, 1);
 	}
 
-	listen(data_sock_fd, 5);
+	listen(data_sock_fd, MAX_CONNECTIONS);
 
 	// Create the initial MAX_THREADS threads
 	createThreads(NULL);
@@ -99,7 +100,7 @@ void setupFrontServer(int port, int range){
 
 	int i;
 	for(i = 0; err == -1 && i < range; i++){
-		debugPrint1("[DS - sFS]\tTrying to connect to FS on port %d...\n", port);
+		debugPrint1("[DS - sFS]\tTrying to connect to FS on port %d...\n", port+i);
 		if (port + i != DS_port){ 
 			server_addr.sin_port = htons(port + i);
 			err = connect(front_sock_fd, (const struct sockaddr *) &server_addr, sizeof(server_addr));

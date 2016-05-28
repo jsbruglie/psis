@@ -14,7 +14,7 @@ typedef struct _kv_pair{
 	int value_length;
 } kv_pair;
 
-typedef struct HashtableStruct{
+typedef struct _Hashtable{
 	LinkedList** table;
 	int size;
 	pthread_mutex_t* lock;
@@ -34,14 +34,12 @@ kv_pair* hashtableRead(Hashtable* _hashtable, uint32_t key);
 int hashtableWrite(Hashtable* _hashtable, uint32_t key, char* value, int value_length, int overwrite);
 int hashtableDelete(Hashtable* _hashtable, uint32_t key);
 void freeHashtable(Hashtable* _hashtable);
+void printHashtable(Hashtable* _hashtable);
 
-// backup and restore functions
+// Backup and restore functions
 int writeBackupHashtable(Hashtable* _hashtable, char* filename);
 Hashtable* restoreFromFile(char* filename, int size);
 
-// generic use mutex lock and unlock functions
+// Generic use mutex lock and unlock functions
 int lockHashtable(Hashtable* _hashtable);
 int unlockHashtable(Hashtable* _hashtable);
-
-// DEBUG
-void printHashtable(Hashtable* _hashtable);

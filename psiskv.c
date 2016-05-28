@@ -10,7 +10,7 @@ int kv_connect(char* kv_server_ip, int kv_server_port){
 	int err =-1;
 	int i;
 	
-    	// Open a socket
+    // Open a socket
  	int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
  	if (sock_fd == -1){
 		perror("[kv_connect]\tSocket");
@@ -18,14 +18,11 @@ int kv_connect(char* kv_server_ip, int kv_server_port){
 	}
 	
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = inet_addr(kv_server_ip); 		// Set destination IP number // 
-	
+	server_addr.sin_addr.s_addr = inet_addr(kv_server_ip); 		// Set destination IP number 
+	server_addr.sin_port = htons(kv_server_port);				// Set destination port 
+
 	// Connect to the server
-	for (i = 0; (err == -1 ) && (i < NUMBER_OF_TRIES); i++){
-		server_addr.sin_port = htons(kv_server_port + i);
-		err = connect(sock_fd, (const struct sockaddr *) &server_addr, sizeof(server_addr));
-	}
-	if (err == -1){
+	if (connect(sock_fd, (const struct sockaddr *) &server_addr, sizeof(server_addr)) == -1){
 		perror("[kv_connect]\tCouldn't connect to the server");
 		return ERROR;
 	}

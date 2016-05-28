@@ -23,7 +23,10 @@
 
 // Default server ports
 #define DEFAULT_FS_PORT 9999
-#define DEFAULT_DS_PORT 10000
+#define DEFAULT_DS_PORT 10100
+
+// Maximum number of ports to try out if the default is unavailable
+#define NUMBER_OF_TRIES 10
 
 // Localhost IP
 #define LOCALHOST "127.0.0.1"
@@ -35,6 +38,9 @@
 // Shell command that launches the servers
 #define EXECUTE_FS "./front_server"
 #define EXECUTE_DS "./data_server"
+
+// Maximum pending socket connections
+#define MAX_CONNECTIONS 5 
 
 // Creates a TCP socket and returns the respective file descriptor
 int createSocket(int port);

@@ -1,12 +1,11 @@
 #include <pthread.h>
-#include <signal.h>
 #include <string.h>
 
 #include "psiskv.h"
 #include "server_common.h"
 
 // Verbose
-#define VERBOSE 1 // Uncomment this line for verbose terminal output
+//#define VERBOSE 1 // Uncomment this line for verbose terminal output
 #include "debug.h"
 
 // Global variables
@@ -25,7 +24,6 @@ pthread_t ds_handler_id;
 void setupDataServer();
 void connectionsHandler();
 void* dataServerHandler(void* thread_arg);
-
 void* consoleHandler(void);
 void shutdownAttempt();
 void quitFrontServer();
@@ -53,7 +51,7 @@ int main(int argc, char **argv){
 		setupDataServer();
 	}
 
-	listen(front_sock_fd, 5);
+	listen(front_sock_fd, MAX_CONNECTIONS);
 
 	// Configure CTR-C signal
 	signal(SIGINT, shutdownAttempt);
@@ -67,6 +65,7 @@ int main(int argc, char **argv){
  	connectionsHandler();
 }
 
+// Initial connection with the data server. Called when recovering from a crash
 void setupDataServer(){
 	
 	debugPrint1("[FS - sDS]\tPort provided: %d. Front server is expectedly recovering from crash.\n", DS_port);
@@ -129,7 +128,7 @@ void connectionsHandler(){
 					DS_port = m.key;
 					DS_connected = 1;
 					debugPrint1("[FS - cH]\tReceived DS port %d.\n", DS_port);
-					// Creates a thread that pings the front server
+					// Creates a thread that checks the state of the data server periodically
 					pthread_create(&ds_handler_id, NULL, (void*) dataServerHandler, (void*) NULL);
 					pthread_detach(ds_handler_id);
 				}
@@ -203,6 +202,5 @@ void shutdownAttempt(){
 void quitFrontServer(){
 	
 	close(front_sock_fd);
-	//close(data_sv_sock_fd);
 	exit(0);
 }

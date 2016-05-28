@@ -31,8 +31,6 @@
 // Client to front server tags
 #define CLIENT_TAG 0
 
-#define NUMBER_OF_TRIES 10
-
 /* 	Data structures */
 typedef struct _message{
 	int flag;

@@ -50,10 +50,10 @@ int main(int argc, char* argv[]){
 		}
 	}
 
-	printf("Writing kv-pair (i,i*10) with i from 0 to %d (overwrite not allowed).\n", MAX_VALUES);
+	printf("Writing kv-pair (i,i*10) with i from 0 to %d (overwrite not allowed).\n", MAX_VALUES - 1);
 	for (i = 0; i < MAX_VALUES; i ++){
 		sprintf(linha, "%u", i*10);
-		kv_write(kv, i , linha, strlen(linha)+1, 0); /* will not overwrite*/
+		kv_write(kv, i , linha, strlen(linha)+1, 0);
 	}
 
 	printf("Press enter to read new values\n");
@@ -64,10 +64,10 @@ int main(int argc, char* argv[]){
 		}
 	}
 
-	printf("Writing kv-pair (i,i*10) with i from 0 to %d (overwrite allowed).\n", MAX_VALUES);
+	printf("Writing kv-pair (i,i*10) with i from 0 to %d (overwrite allowed).\n", MAX_VALUES - 1);
 	for (i = 0; i < MAX_VALUES; i ++){
 		sprintf(linha, "%u", i*10);
-		kv_write(kv, i , linha, strlen(linha)+1, 1); /* will not overwrite*/
+		kv_write(kv, i , linha, strlen(linha)+1, 1);
 	}
 
 	printf("Press enter to read new values\n");
