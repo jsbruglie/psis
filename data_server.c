@@ -2,7 +2,7 @@
 #include "server_common.h"
 
 // Verbose
-//#define VERBOSE 1 // Uncomment this line for verbose terminal output
+#define VERBOSE 1 // Uncomment this line for verbose terminal output
 #include "debug.h"
 
 #define MIN_THREADS 3
@@ -20,6 +20,7 @@ int data_sock_fd = -1;
 int front_sock_fd = -1;
 
 int DS_port = -1;
+int FS_port = -1;
 int FS_connected = 0;
 
 // Threadpool global variables
@@ -52,6 +53,10 @@ int main(int argc, char **argv){
 
 	//printHashtable(hashtable);
 
+	if (argc > 1){
+		FS_port = atoi(argv[1]);
+	}
+
 	// Create a socket
 	int i;
 	for(i = 0; data_sock_fd == -1 && i < NUMBER_OF_TRIES; i++)
@@ -63,7 +68,11 @@ int main(int argc, char **argv){
  	debugPrint("[DS - main]\tSocket created and binded. Data server ready to receive messages.\n"); // DEBUG
 
  	// Configures the connection with the front server
-	setupFrontServer(DEFAULT_FS_PORT, NUMBER_OF_TRIES);
+	if (FS_port == -1){
+		setupFrontServer(DEFAULT_FS_PORT, NUMBER_OF_TRIES);
+	}else{
+		setupFrontServer(FS_port, 1);
+	}
 
 	listen(data_sock_fd, 5);
 
@@ -90,6 +99,7 @@ void setupFrontServer(int port, int range){
 
 	int i;
 	for(i = 0; err == -1 && i < range; i++){
+		debugPrint1("[DS - sFS]\tTrying to connect to FS on port %d...\n", port);
 		if (port + i != DS_port){ 
 			server_addr.sin_port = htons(port + i);
 			err = connect(front_sock_fd, (const struct sockaddr *) &server_addr, sizeof(server_addr));
@@ -158,19 +168,22 @@ void* clientHandler(void* pthread_arg){
 	}
 	
 	checkThreads();
-	
+	debugPrint1("[DS - cH]\tNew client connected with fd %d.\n", client_fd);
+
 	while ((nbytes = recv(client_fd, &m, sizeof(message), 0)) != 0){
 		if (m.flag == FS_SERVER_TAG){
 			if (FS_connected == 0){
 				debugPrint1("[DS - cH]\tFront server reconnected. It's active and listenning to port %d.\n", m.key);
 				port_msg = m.key;
 				setupFrontServer(port_msg, 1);
+				break;
 			}
 		}
 		else{
 			processRequest(client_fd, m, hashtable, log_fp, &log_lock);
 		}
 	}
+	debugPrint1("[DS - cH]\tClient with fd %d is closing connection.\n", client_fd);
 	//printHashtable(hashtable);
 	pthread_exit(NULL);
 }

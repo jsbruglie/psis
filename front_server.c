@@ -6,7 +6,7 @@
 #include "server_common.h"
 
 // Verbose
-// #define VERBOSE 1 // Uncomment this line for verbose terminal output
+#define VERBOSE 1 // Uncomment this line for verbose terminal output
 #include "debug.h"
 
 // Global variables
@@ -33,6 +33,10 @@ void quitFrontServer();
 // Main program
 int main(int argc, char **argv){
 	
+	if (argc > 1){
+		DS_port = atoi(argv[1]);
+	}
+
 	// Create a socket
 	int i;
 	for (i = 0; front_sock_fd == -1 && i < NUMBER_OF_TRIES; i++){
@@ -42,11 +46,10 @@ int main(int argc, char **argv){
 	if (front_sock_fd == -1){
 		exit(-1);
 	}
-	FS_port = DEFAULT_FS_PORT + i -1;
+	FS_port = DEFAULT_FS_PORT + i - 1;
 
 	// If the DS port was provided; Needed when recovering from a crash
-	if (argc > 1){
-		DS_port = atoi(argv[1]);
+	if (DS_port != -1){
 		setupDataServer();
 	}
 
@@ -153,9 +156,12 @@ void* dataServerHandler(void* thread_arg){
 		if(response == DEAD && DS_connected == 1){
 			
 			DS_connected = 0;
+			DS_port = -1;
 			debugPrint("[FS - dSH]\tThe data server has gone down. Attempting to restart it.\n");
 			if (!fork()){
-				char* DS_argv[] = {EXECUTE_DS, 0};
+				char current_FS_port[10];
+				sprintf(current_FS_port, "%d", FS_port);
+				char* DS_argv[] = {EXECUTE_DS, current_FS_port, 0};
 				execve(DS_argv[0], DS_argv, NULL);
 			}
 			pthread_exit(NULL);
