@@ -50,10 +50,8 @@ int main(int argc, char **argv){
 
 	// Open log file and apply entries to the hashtable. Initialize log file mutex lock
 	log_fp = (FILE*) processLogEntries(LOG_FILE, hashtable);
-	backup();
 	pthread_mutex_init(&log_lock, NULL);
-
-	//printHashtable(hashtable);
+	backup();
 
 	if (argc > 1){
 		FS_port = atoi(argv[1]);
